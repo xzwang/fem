@@ -48,6 +48,8 @@ cscope.*
 /build.h
 /AM335X/*
 *.deps*
+*.libs*
+*.l[oa]
 
 # gnu global files
 GPATH

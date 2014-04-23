@@ -6,10 +6,9 @@
 
 #####################ENVIRMENT PATH#####################
 export TOP :=$(shell pwd)
-export SRCBASE:=/opt/fem
+export SRCBASE:=$(TOP)
 export ARCH=arm
 export PLATFORM=AM335X
-export LINUXDIR :=/opt/kernel
 
 V ?= V1.0.0
 
@@ -24,6 +23,8 @@ export NM := $(CROSS_COMPILE)nm
 export RANLIB := $(CROSS_COMPILE)ranlib
 export STRIP := $(CROSS_COMPILE)strip
 export SIZE := $(CROSS_COMPILE)size
+export CFLAGS := -I$(TOP)/common
+export LDFLAGS := -L$(TOP)/common -lfem
 
 
 #####################IMAGE DIR#########################
@@ -41,11 +42,12 @@ obj-distclean := $(foreach obj,$(obj-y) $(obj-n),$(obj)-distclean)
 all: build $(obj-y)
 
 build:
-	echo "#define BUILD_DATE \"$(shell date +%D)\"">./build.h
-	echo "#define WARE_VERSION \"$(V)\"" >>./build.h
+	echo "#define BUILD_DATE \"$(shell date +%D)\"">./common/build.h
+	echo "#define WARE_VERSION \"$(V)\"" >>./common/build.h
+	make -C common
 
 clean: $(obj-clean)
-	echo "clean"
+	make -C common clean
 
 clean_target:
 	rm -rf $(INSTALLDIR)

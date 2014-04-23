@@ -1,7 +1,7 @@
 
 all:	compile 
 
-ARCH	= libiio.a
+LIBS	= libiio.a
 NAME	= iio
 
 CROSS_COMPILE = arm-arago-linux-gnueabi-
@@ -13,28 +13,28 @@ LD=$(CROSS_COMPILE)ld
 DEPEND_FILES	= iio.o
 
 DEBUG	= -g -Wall
-IFLAGS 	= -I./
-LDFLAGS	= -pthread
+IFLAGS 	+= -I./
+LDFLAGS	+= -pthread
 
 compile: $(NAME)
 
 #
-#	Build archive of objects
+#	Build LIBSive of objects
 #
-$(ARCH): $(DEPEND_FILES)
-	$(AR) $(ARFLAGS) $(ARCH) $?
+$(LIBS): $(DEPEND_FILES)
+	$(AR) $(ARFLAGS) $(LIBS) $?
 
 #
 #	Primary link
 #
-$(NAME): Makefile $(ARCH)
+$(NAME): Makefile $(LIBS)
 	$(CC) -o $(NAME) $(DEBUG) \
 		$(CFLAGS) $(IFLAGS) \
-		main.c $(ARCH) $(LDFLAGS) 
+		main.c $(LIBS) $(LDFLAGS) 
 
 	@cp $(NAME) /home/xzwang/nfs/mnt
 clean:
-	rm -f $(NAME) $(ARCH) $(DEPEND_FILES)
+	rm -f $(NAME) $(LIBS) $(DEPEND_FILES)
 
 #
 #	Dependencies

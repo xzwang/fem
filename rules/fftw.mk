@@ -1,5 +1,5 @@
 fftw-configure:
-	cd fftw && ./configure --host=arm-linux --prefix=$(INSTALLDIR)/fftw CC=$(CC)
+	cd fftw && ./configure --host=arm-linux --prefix=$(INSTALLDIR)/fftw CC=$(CC) LDFLAGS='' CFLAGS=''
 
 fftw: fftw-configure
 	make -j 4 -C fftw

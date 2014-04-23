@@ -19,10 +19,10 @@ void signal_segv_exit(void)
 int main(int argc, char *argv[])
 {
 
-	FEM_DBG("Main Process:PID[%d]\n", getpid());
 	signal(SIGINT, (void *)signal_exit);
 	signal(SIGQUIT, (void *)signal_exit);
 	signal(SIGSEGV, (void *)signal_segv_exit);
+	board_info();
 
 	create_iio_pthread();
 	stop_iio_pthread();

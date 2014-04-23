@@ -45,4 +45,8 @@
 		do {;}while(0)
 #endif
 
+extern int32_t sysprintf(const char *fmt, ...);
+extern int32_t board_info(void);
+#define msdelay(s)	usleep(s*1000)
+
 #endif /* __COMMON_H__ */
