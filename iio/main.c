@@ -1,5 +1,6 @@
 #include "common.h"
 #include "iio.h"
+#include "fem_fb.h"
 
 static int running = 1;
 void signal_exit(void)
@@ -25,7 +26,12 @@ int main(int argc, char *argv[])
 	board_info();
 
 	create_iio_pthread();
+
+	while (1)
+	{
+		lcd_test();
+	}
+
 	stop_iio_pthread();
-	
 	return 0;
 }

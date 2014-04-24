@@ -9,7 +9,7 @@ AR=$(CROSS_COMPILE)ar
 LD=$(CROSS_COMPILE)ld
 
 # Dependencies
-DEPEND_FILES	= common.o
+DEPEND_FILES	= common.o liblcd.o syspicture.o fem_fb.o asc1224.o
 
 DEBUG	= -g -Wall
 IFLAGS 	+= -I./

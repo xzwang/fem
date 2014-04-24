@@ -1,0 +1,87 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+AR	Makefile	/^AR=$(CROSS_COMPILE)ar$/;"	m
+ASC16_FONT_SIZE	liblcd.h	21;"	d
+ASC24_FONT_SIZE	liblcd.h	20;"	d
+BUILD_DATE	build.h	1;"	d
+CC	Makefile	/^CC=$(CROSS_COMPILE)gcc$/;"	m
+CDNOTUSE	liblcd.h	/^	CDNOTUSE,$/;"	e	enum:__anon1
+CDSWAP	liblcd.h	/^	CDSWAP,$/;"	e	enum:__anon1
+CROSS_COMPILE	Makefile	/^CROSS_COMPILE = arm-arago-linux-gnueabi-$/;"	m
+DEBUG	Makefile	/^DEBUG	= -g -Wall$/;"	m
+DEBUG	common.h	39;"	d
+DEPEND_FILES	Makefile	/^DEPEND_FILES	= common.o liblcd.o syspicture.o fem_fb.o asc1224.o$/;"	m
+FB_BLACK	liblcd.h	28;"	d
+FB_BPP	liblcd.h	22;"	d
+FB_LINE_LENGTH	liblcd.h	27;"	d
+FB_XMAX	liblcd.h	23;"	d
+FB_XOFFSET	liblcd.h	25;"	d
+FB_YMAX	liblcd.h	24;"	d
+FB_YOFFSET	liblcd.h	26;"	d
+FEM_DBG	common.h	41;"	d
+FEM_DBG	common.h	44;"	d
+FONT_COLOR	liblcd.h	17;"	d
+HZ16_FONT_SIZE	liblcd.h	19;"	d
+HZ24_FONT_SIZE	liblcd.h	18;"	d
+HZK24_FILE	liblcd.h	29;"	d
+LCD_DEVICE	liblcd.h	16;"	d
+LD	Makefile	/^LD=$(CROSS_COMPILE)ld$/;"	m
+LIBS	Makefile	/^LIBS = libfem.a$/;"	m
+NETERROR	liblcd.h	/^	NETERROR,$/;"	e	enum:__anon1
+SYSWRITECD	liblcd.h	/^	SYSWRITECD,$/;"	e	enum:__anon1
+ScrCls	liblcd.c	/^void ScrCls(char *fb)$/;"	f
+Scrcls	liblcd.c	/^void Scrcls(char *fb, int start_l, int end_l)$/;"	f
+USERINFO	liblcd.h	/^	USERINFO,$/;"	e	enum:__anon1
+WAITBACKGD	liblcd.h	/^	WAITBACKGD,$/;"	e	enum:__anon1
+WAITINFO	liblcd.h	/^	WAITINFO,$/;"	e	enum:__anon1
+WAITSYS	liblcd.h	/^	WAITSYS,$/;"	e	enum:__anon1
+WARE_VERSION	build.h	2;"	d
+WRITEERR	liblcd.h	/^	WRITEERR,$/;"	e	enum:__anon1
+WRITESUCC	liblcd.h	/^	WRITESUCC,$/;"	e	enum:__anon1
+_LIBLCD_H_	liblcd.h	2;"	d
+_SYS_PIC_	syspicture.h	2;"	d
+__ASC1224_H__	asc1224.c	2;"	d	file:
+__ASC1224_H__	asc1224.h	2;"	d
+__COMMON_H__	common.h	11;"	d
+__FEM_FB__	fem_fb.h	2;"	d
+asc12x24	asc1224.c	/^const char asc12x24[] = {$/;"	v
+assign_picture	liblcd.c	/^int assign_picture(char *fb, int x, int y, int xoft, int yoft, const unsigned short *Image)$/;"	f
+board_info	common.c	/^int32_t board_info(void)$/;"	f
+close_lcd	liblcd.c	/^void close_lcd(int fd, char *fb, int fbsize)$/;"	f
+display_def_picture	liblcd.c	/^int display_def_picture(char *fb, int type)$/;"	f
+drawch16	liblcd.c	/^static void drawch16(char *fb, int x, int y, unsigned char *asc16)$/;"	f	file:
+drawch24	liblcd.c	/^static void drawch24(char *fb, int x, int y, int addr)$/;"	f	file:
+fill_background	liblcd.c	/^int fill_background(char *fb, const unsigned short *Image)$/;"	f
+gImage_background	syspicture.c	/^const unsigned char gImage_background[261120] = { \/* 0X00,0X10,0XE0,0X01,0X10,0X01,0X01,0X1B, *\/$/;"	v
+gImage_cdswap	syspicture.c	/^const unsigned char gImage_cdswap[66054] = { \/* 0X00,0X10,0X47,0X01,0X65,0X00,0X01,0X1B, *\/$/;"	v
+gImage_neterror	syspicture.c	/^const unsigned char gImage_neterror[66054] = { \/* 0X00,0X10,0X47,0X01,0X65,0X00,0X01,0X1B, *\/$/;"	v
+gImage_notusecd	syspicture.c	/^const unsigned char gImage_notusecd[66054] = { \/* 0X00,0X10,0X47,0X01,0X65,0X00,0X01,0X1B, *\/$/;"	v
+gImage_pleasecd	syspicture.c	/^const unsigned char gImage_pleasecd[17728] = { \/* 0X00,0X10,0X15,0X01,0X20,0X00,0X01,0X1B, *\/$/;"	v
+gImage_syswritecd	syspicture.c	/^const unsigned char gImage_syswritecd[66054] = { \/* 0X00,0X10,0X47,0X01,0X65,0X00,0X01,0X1B, *\/$/;"	v
+gImage_user	syspicture.c	/^const unsigned char gImage_user[261120] = { \/* 0X00,0X10,0XE0,0X01,0X10,0X01,0X01,0X1B, *\/$/;"	v
+gImage_waitsys	syspicture.c	/^const unsigned char gImage_waitsys[66054] = { \/* 0X00,0X10,0X47,0X01,0X65,0X00,0X01,0X1B, *\/$/;"	v
+gImage_writecder	syspicture.c	/^const unsigned char gImage_writecder[66054] = { \/* 0X00,0X10,0X47,0X01,0X65,0X00,0X01,0X1B, *\/$/;"	v
+gImage_writecdsc	syspicture.c	/^const unsigned char gImage_writecdsc[66054] = { \/* 0X00,0X10,0X47,0X01,0X65,0X00,0X01,0X1B, *\/$/;"	v
+get_asc16_font	liblcd.c	/^static int get_asc16_font(unsigned long ftoft, unsigned char *font)$/;"	f	file:
+get_hzk16_font	liblcd.c	/^static int get_hzk16_font(unsigned long ftoft, unsigned char *font)$/;"	f	file:
+get_hzk24_font	liblcd.c	/^static int get_hzk24_font(unsigned long ftoft, unsigned char *font)$/;"	f	file:
+init_lcd	liblcd.c	/^int init_lcd(int fd, struct fb_var_screeninfo *vinfo,$/;"	f
+lcd_printf16	liblcd.c	/^int lcd_printf16(char *fb, int x, int y, unsigned char *font)$/;"	f
+lcd_printf24	liblcd.c	/^int lcd_printf24(char *fb, int x, int y, unsigned char *font)$/;"	f
+lcd_test	fem_fb.c	/^void lcd_test(void)$/;"	f
+msdelay	common.h	50;"	d
+open_lcd	liblcd.c	/^int open_lcd(void)$/;"	f
+putc_lcd_asc16	liblcd.c	/^void putc_lcd_asc16(char *fb, int x, int y, char ch)$/;"	f
+putc_lcd_asc24	liblcd.c	/^void putc_lcd_asc24(char *fb, int x, int y, char ch)$/;"	f
+putc_lcd_hzk16	liblcd.c	/^static void putc_lcd_hzk16(char *fb, int x, int y, unsigned char *mat)$/;"	f	file:
+putc_lcd_hzk24	liblcd.c	/^static void putc_lcd_hzk24(char *fb, int x, int y, unsigned char *mat)$/;"	f	file:
+puts_lcd_asc16	liblcd.c	/^void puts_lcd_asc16(char *fb, int x, int y, const char *fmt, ...)$/;"	f
+puts_lcd_asc24	liblcd.c	/^void puts_lcd_asc24(char *fb, int x, int y, const char *fmt, ...)$/;"	f
+request_fbmem	liblcd.c	/^char *request_fbmem(int fd, int fbsize)$/;"	f
+set_lcd_backlight	liblcd.c	/^int set_lcd_backlight(int brightness)$/;"	f
+sysprintf	common.c	/^int32_t sysprintf(const char *fmt, ...)$/;"	f
+sysprintf	liblcd.c	/^static int sysprintf(const char *fmt, ...)$/;"	f	file:

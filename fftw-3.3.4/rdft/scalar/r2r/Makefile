@@ -207,7 +207,7 @@ AVX_CFLAGS =
 AWK = mawk
 CC = arm-arago-linux-gnueabi-gcc -std=gnu99
 CCDEPMODE = depmode=gcc3
-CFLAGS = -O3 -fomit-frame-pointer -fstrict-aliasing -fno-schedule-insns -ffast-math
+CFLAGS = -O3
 CHECK_PL_OPTS = 
 CPP = arm-arago-linux-gnueabi-gcc -std=gnu99 -E
 CPPFLAGS = 
@@ -235,7 +235,7 @@ INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LD = arm-arago-linux-gnueabi-ld
-LDFLAGS = 
+LDFLAGS = -L.
 LIBOBJS =  ${LIBOBJDIR}strtod$U.o
 LIBQUADMATH = 
 LIBS = -lm 

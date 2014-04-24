@@ -39,7 +39,7 @@
 /* #undef FC_DUMMY_MAIN_EQ_F77 */
 
 /* C compiler name and flags */
-#define FFTW_CC "arm-arago-linux-gnueabi-gcc -std=gnu99 -O3 -fomit-frame-pointer -fstrict-aliasing -fno-schedule-insns -ffast-math"
+#define FFTW_CC "arm-arago-linux-gnueabi-gcc -std=gnu99 -O3"
 
 /* Define to enable extra FFTW debugging code. */
 /* #undef FFTW_DEBUG */
