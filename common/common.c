@@ -31,7 +31,7 @@ int32_t sysprintf(const char *fmt, ...)
 }
 
 /*****************************************************************
-* @Function	board_info  - Display board information and 
+* @Function	board_info  - display board information and 
 *			software version
 *
 * @Returns	
@@ -42,3 +42,26 @@ int32_t board_info(void)
 	fprintf(stderr, "\tDATA: %s\n", BUILD_DATE);
 	fprintf(stderr, "\tVersion: %s\n", WARE_VERSION);
 }
+
+/*****************************************************************
+* @Function	sysdate  - get system time, UTC is 0
+*
+* @Param	tm - the pointer to the tm
+*
+* @Returns	0
+*****************************************************************/
+int systime(struct tm *tm)
+{
+        time_t timep;
+
+        time(&timep);
+
+//      UTC date
+//      tm = gmtime(&timep);
+
+        /* local date */
+        tm = localtime(&timep);
+
+        return 0;
+}
+
