@@ -232,7 +232,7 @@ MKDIR_P = /bin/mkdir -p
 MPICC = 
 MPILIBS = 
 MPIRUN = 
-NEON_CFLAGS = 
+NEON_CFLAGS = -mfpu=neon
 NM = arm-arago-linux-gnueabi-nm
 NMEDIT = 
 OBJDUMP = objdump
@@ -250,8 +250,8 @@ PACKAGE_URL =
 PACKAGE_VERSION = 3.3.4
 PATH_SEPARATOR = :
 POW_LIB = -lm
-PRECISION = d
-PREC_SUFFIX = 
+PRECISION = s
+PREC_SUFFIX = f
 PTHREAD_CC = 
 PTHREAD_CFLAGS = 
 PTHREAD_LIBS = 
@@ -322,7 +322,7 @@ top_srcdir = ..
 AM_CPPFLAGS = -I$(top_srcdir)/simd
 noinst_LTLIBRARIES = libkernel.la
 
-# pkgincludedir = $(includedir)/fftw3
+# pkgincludedir = $(includedir)/fftw3f
 # pkginclude_HEADERS = ifftw.h cycle.h
 libkernel_la_SOURCES = align.c alloc.c assert.c awake.c buffered.c	\
 cpy1d.c cpy2d-pair.c cpy2d.c ct.c debug.c extract-reim.c hash.c iabs.c	\

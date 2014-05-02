@@ -277,7 +277,7 @@ MKDIR_P = /bin/mkdir -p
 MPICC = 
 MPILIBS = 
 MPIRUN = 
-NEON_CFLAGS = 
+NEON_CFLAGS = -mfpu=neon
 NM = arm-arago-linux-gnueabi-nm
 NMEDIT = 
 OBJDUMP = objdump
@@ -295,8 +295,8 @@ PACKAGE_URL =
 PACKAGE_VERSION = 3.3.4
 PATH_SEPARATOR = :
 POW_LIB = -lm
-PRECISION = d
-PREC_SUFFIX = 
+PRECISION = s
+PREC_SUFFIX = f
 PTHREAD_CC = 
 PTHREAD_CFLAGS = 
 PTHREAD_LIBS = 
@@ -373,7 +373,7 @@ include_HEADERS = fftw3.h fftw3.f fftw3l.f03 fftw3q.f03
 nodist_include_HEADERS = fftw3.f03
 noinst_LTLIBRARIES = libapi.la
 
-# pkgincludedir = $(includedir)/fftw3
+# pkgincludedir = $(includedir)/fftw3f
 # pkginclude_HEADERS = api.h x77.h guru.h guru64.h
 libapi_la_SOURCES = apiplan.c configure.c execute-dft-c2r.c		\
 execute-dft-r2c.c execute-dft.c execute-r2r.c execute-split-dft-c2r.c	\

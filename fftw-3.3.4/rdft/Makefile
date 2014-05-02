@@ -277,7 +277,7 @@ MKDIR_P = /bin/mkdir -p
 MPICC = 
 MPILIBS = 
 MPIRUN = 
-NEON_CFLAGS = 
+NEON_CFLAGS = -mfpu=neon
 NM = arm-arago-linux-gnueabi-nm
 NMEDIT = 
 OBJDUMP = objdump
@@ -295,8 +295,8 @@ PACKAGE_URL =
 PACKAGE_VERSION = 3.3.4
 PATH_SEPARATOR = :
 POW_LIB = -lm
-PRECISION = d
-PREC_SUFFIX = 
+PRECISION = s
+PREC_SUFFIX = f
 PTHREAD_CC = 
 PTHREAD_CFLAGS = 
 PTHREAD_LIBS = 
@@ -368,7 +368,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/kernel -I$(top_srcdir)/dft
 SUBDIRS = scalar simd
 noinst_LTLIBRARIES = librdft.la
 
-# pkgincludedir = $(includedir)/fftw3
+# pkgincludedir = $(includedir)/fftw3f
 # pkginclude_HEADERS = codelet-rdft.h rdft.h
 RDFT2 = buffered2.c direct2.c nop2.c rank0-rdft2.c rank-geq2-rdft2.c	\
 plan2.c problem2.c solve2.c vrank-geq1-rdft2.c rdft2-rdft.c		\

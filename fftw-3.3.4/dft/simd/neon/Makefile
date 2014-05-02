@@ -187,16 +187,16 @@ am__objects_18 = $(am__objects_1) $(am__objects_2) $(am__objects_3) \
 	$(am__objects_13) $(am__objects_14) $(am__objects_15) \
 	$(am__objects_16) $(am__objects_17)
 am__objects_19 = $(am__objects_18) genus.lo codlist.lo
-#am__objects_20 = $(am__objects_19)
-#am_libdft_neon_codelets_la_OBJECTS =  \
-#	$(am__objects_20)
+am__objects_20 = $(am__objects_19)
+am_libdft_neon_codelets_la_OBJECTS =  \
+	$(am__objects_20)
 libdft_neon_codelets_la_OBJECTS =  \
 	$(am_libdft_neon_codelets_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-#am_libdft_neon_codelets_la_rpath =
+am_libdft_neon_codelets_la_rpath =
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -315,7 +315,7 @@ MKDIR_P = /bin/mkdir -p
 MPICC = 
 MPILIBS = 
 MPIRUN = 
-NEON_CFLAGS = 
+NEON_CFLAGS = -mfpu=neon
 NM = arm-arago-linux-gnueabi-nm
 NMEDIT = 
 OBJDUMP = objdump
@@ -333,8 +333,8 @@ PACKAGE_URL =
 PACKAGE_VERSION = 3.3.4
 PATH_SEPARATOR = :
 POW_LIB = -lm
-PRECISION = d
-PREC_SUFFIX = 
+PRECISION = s
+PREC_SUFFIX = f
 PTHREAD_CC = 
 PTHREAD_CFLAGS = 
 PTHREAD_LIBS = 
@@ -488,9 +488,9 @@ AM_CPPFLAGS = -I$(top_srcdir)/kernel -I$(top_srcdir)/dft	\
 -I$(top_srcdir)/dft/simd -I$(top_srcdir)/simd-support
 
 EXTRA_DIST = $(SIMD_CODELETS) genus.c codlist.c
-#BUILT_SOURCES = $(EXTRA_DIST)
-#noinst_LTLIBRARIES = libdft_neon_codelets.la
-#libdft_neon_codelets_la_SOURCES = $(BUILT_SOURCES)
+BUILT_SOURCES = $(EXTRA_DIST)
+noinst_LTLIBRARIES = libdft_neon_codelets.la
+libdft_neon_codelets_la_SOURCES = $(BUILT_SOURCES)
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 

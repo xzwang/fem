@@ -8,7 +8,7 @@
 /* #undef BENCHFFT_QUAD */
 
 /* Define to compile in single precision. */
-/* #undef BENCHFFT_SINGLE */
+#define BENCHFFT_SINGLE 1
 
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
@@ -63,7 +63,7 @@
 /* #undef FFTW_RANDOM_ESTIMATOR */
 
 /* Define to compile in single precision. */
-/* #undef FFTW_SINGLE */
+#define FFTW_SINGLE 1
 
 /* Define to 1 if you have the `abort' function. */
 #define HAVE_ABORT 1
@@ -198,7 +198,7 @@
 /* #undef HAVE_MPI */
 
 /* Define to enable ARM NEON optimizations. */
-/* #undef HAVE_NEON */
+#define HAVE_NEON 1
 
 /* Define if OpenMP is enabled */
 /* #undef HAVE_OPENMP */

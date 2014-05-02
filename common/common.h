@@ -47,6 +47,7 @@
 
 extern int32_t sysprintf(const char *fmt, ...);
 extern int32_t board_info(void);
+extern uint32_t get_of_tv(void);
 #define msdelay(s)	usleep(s*1000)
 
 #endif /* __COMMON_H__ */

@@ -135,7 +135,7 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libfftw3_la_DEPENDENCIES = kernel/libkernel.la \
+libfftw3f_la_DEPENDENCIES = kernel/libkernel.la \
 	dft/libdft.la dft/scalar/libdft_scalar.la \
 	dft/scalar/codelets/libdft_scalar_codelets.la rdft/librdft.la \
 	rdft/scalar/librdft_scalar.la \
@@ -144,16 +144,16 @@ libfftw3_la_DEPENDENCIES = kernel/libkernel.la \
 	rdft/scalar/r2r/librdft_scalar_r2r.la reodft/libreodft.la \
 	api/libapi.la $(SIMD_LIBS) $(SSE2_LIBS) $(AVX_LIBS) \
 	$(ALTIVEC_LIBS) $(NEON_LIBS) $(COMBINED_THREADLIBS)
-am_libfftw3_la_OBJECTS =
-libfftw3_la_OBJECTS =  \
-	$(am_libfftw3_la_OBJECTS)
+am_libfftw3f_la_OBJECTS =
+libfftw3f_la_OBJECTS =  \
+	$(am_libfftw3f_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-libfftw3_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+libfftw3f_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(AM_CFLAGS) $(CFLAGS) $(libfftw3_la_LDFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS) $(libfftw3f_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
@@ -186,8 +186,8 @@ AM_V_CCLD = $(am__v_CCLD_$(V))
 am__v_CCLD_ = $(am__v_CCLD_$(AM_DEFAULT_VERBOSITY))
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libfftw3_la_SOURCES)
-DIST_SOURCES = $(libfftw3_la_SOURCES)
+SOURCES = $(libfftw3f_la_SOURCES)
+DIST_SOURCES = $(libfftw3f_la_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -332,7 +332,7 @@ MKDIR_P = /bin/mkdir -p
 MPICC = 
 MPILIBS = 
 MPIRUN = 
-NEON_CFLAGS = 
+NEON_CFLAGS = -mfpu=neon
 NM = arm-arago-linux-gnueabi-nm
 NMEDIT = 
 OBJDUMP = objdump
@@ -350,8 +350,8 @@ PACKAGE_URL =
 PACKAGE_VERSION = 3.3.4
 PATH_SEPARATOR = :
 POW_LIB = -lm
-PRECISION = d
-PREC_SUFFIX = 
+PRECISION = s
+PREC_SUFFIX = f
 PTHREAD_CC = 
 PTHREAD_CFLAGS = 
 PTHREAD_LIBS = 
@@ -420,10 +420,10 @@ top_build_prefix =
 top_builddir = .
 top_srcdir = .
 OPTIONS_AUTOMAKE = gnu
-lib_LTLIBRARIES = libfftw3.la
+lib_LTLIBRARIES = libfftw3f.la
 GENFFT = 
 
-# pkgincludedir = $(includedir)/fftw3
+# pkgincludedir = $(includedir)/fftw3f
 # nodist_pkginclude_HEADERS = config.h
 
 # recompile genfft if maintainer mode is true
@@ -460,12 +460,12 @@ SIMD_LIBS = \
 #ALTIVEC_LIBS = dft/simd/altivec/libdft_altivec_codelets.la	\
 #rdft/simd/altivec/librdft_altivec_codelets.la
 
-#NEON_LIBS = dft/simd/neon/libdft_neon_codelets.la	\
-#rdft/simd/neon/librdft_neon_codelets.la
+NEON_LIBS = dft/simd/neon/libdft_neon_codelets.la	\
+rdft/simd/neon/librdft_neon_codelets.la
 
-##COMBINED_THREADLIBS = threads/libfftw3_threads.la
-libfftw3_la_SOURCES = 
-libfftw3_la_LIBADD = \
+##COMBINED_THREADLIBS = threads/libfftw3f_threads.la
+libfftw3f_la_SOURCES =
+libfftw3f_la_LIBADD = \
 	kernel/libkernel.la				\
 	dft/libdft.la					\
 	dft/scalar/libdft_scalar.la			\
@@ -480,16 +480,16 @@ libfftw3_la_LIBADD = \
         $(SIMD_LIBS) $(SSE2_LIBS) $(AVX_LIBS) $(ALTIVEC_LIBS) $(NEON_LIBS)    	\
 	$(COMBINED_THREADLIBS)
 
-libfftw3_la_LDFLAGS = -no-undefined -version-info	\
+libfftw3f_la_LDFLAGS = -no-undefined -version-info	\
 7:4:4
 
 
 # cannot use -no-undefined since dependent on libquadmath
-#libfftw3_la_LDFLAGS = -version-info 7:4:4
+#libfftw3f_la_LDFLAGS = -version-info 7:4:4
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = fftw3.pc
+pkgconfig_DATA = fftw3f.pc
 WISDOM_DIR = /etc/fftw
-WISDOM = wisdom
+WISDOM = wisdomf
 WISDOM_TIME = 12 # default to 12-hour limit, i.e. overnight
 WISDOM_FLAGS = --verbose --canonical --time-limit=$(WISDOM_TIME)
 all: config.h
@@ -583,8 +583,8 @@ clean-libLTLIBRARIES:
 	  rm -f $${locs}; \
 	}
 
-libfftw3.la: $(libfftw3_la_OBJECTS) $(libfftw3_la_DEPENDENCIES) $(EXTRA_libfftw3_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libfftw3_la_LINK) -rpath $(libdir) $(libfftw3_la_OBJECTS) $(libfftw3_la_LIBADD) $(LIBS)
+libfftw3f.la: $(libfftw3f_la_OBJECTS) $(libfftw3f_la_DEPENDENCIES) $(EXTRA_libfftw3f_la_DEPENDENCIES)
+	$(AM_V_CCLD)$(libfftw3f_la_LINK) -rpath $(libdir) $(libfftw3f_la_OBJECTS) $(libfftw3f_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -1047,11 +1047,11 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-pkgconfigDATA
 	uninstall-libLTLIBRARIES uninstall-pkgconfigDATA
 
 
-fftw3.pc: fftw.pc
-	cp -f fftw.pc fftw3.pc
+fftw3f.pc: fftw.pc
+	cp -f fftw.pc fftw3f.pc
 
 wisdom:
-	tools/fftw-wisdom -o $@ $(WISDOM_FLAGS)
+	tools/fftwf-wisdom -o $@ $(WISDOM_FLAGS)
 
 install-wisdom: wisdom
 	$(mkinstalldirs) $(WISDOM_DIR)

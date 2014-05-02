@@ -50,7 +50,7 @@ int32_t board_info(void)
 *
 * @Returns	0
 *****************************************************************/
-int systime(struct tm *tm)
+int32_t systime(struct tm *tm)
 {
         time_t timep;
 
@@ -64,4 +64,19 @@ int systime(struct tm *tm)
 
         return 0;
 }
+
+/*****************************************************************
+* @Function	get_of_tv  -
+*
+* @Returns
+*****************************************************************/
+uint32_t get_of_tv(void)
+{
+	struct timeval tv;
+
+	gettimeofday(&tv, NULL);
+
+	return tv.tv_sec*100000+tv.tv_usec;
+}
+
 

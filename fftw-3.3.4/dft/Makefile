@@ -272,7 +272,7 @@ MKDIR_P = /bin/mkdir -p
 MPICC = 
 MPILIBS = 
 MPIRUN = 
-NEON_CFLAGS = 
+NEON_CFLAGS = -mfpu=neon
 NM = arm-arago-linux-gnueabi-nm
 NMEDIT = 
 OBJDUMP = objdump
@@ -290,8 +290,8 @@ PACKAGE_URL =
 PACKAGE_VERSION = 3.3.4
 PATH_SEPARATOR = :
 POW_LIB = -lm
-PRECISION = d
-PREC_SUFFIX = 
+PRECISION = s
+PREC_SUFFIX = f
 PTHREAD_CC = 
 PTHREAD_CFLAGS = 
 PTHREAD_LIBS = 
@@ -363,7 +363,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/kernel
 SUBDIRS = scalar simd
 noinst_LTLIBRARIES = libdft.la
 
-# pkgincludedir = $(includedir)/fftw3
+# pkgincludedir = $(includedir)/fftw3f
 # pkginclude_HEADERS = codelet-dft.h dft.h
 libdft_la_SOURCES = bluestein.c buffered.c conf.c ct.c dftw-direct.c	\
 dftw-directsq.c dftw-generic.c dftw-genericbuf.c direct.c generic.c	\

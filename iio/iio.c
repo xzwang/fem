@@ -45,14 +45,16 @@ void iio_pthread(void)
 {
 	int32_t dat;
 	float resol = ((float)1800)/4095, voltage;//mV
+	uint32_t us;
 
 	fprintf(stderr, "resolution %f", resol);
 	while (1) {
-	
+		us = get_of_tv();
 		dat = iio_raw_read();
+		us = get_of_tv() - us;
 		voltage = resol * dat;
 
-		FEM_DBG("%f mV\n", voltage);
+		FEM_DBG("t %d : %f mV\n", us, voltage);
 		/* usleep(10000); */
 		sleep(1);
 	}
