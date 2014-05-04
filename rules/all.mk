@@ -1,6 +1,7 @@
 include rules/iio.mk
 include rules/fftw.mk
 include rules/fft.mk
+include rules/busybox.mk
 
 %:
 	[ ! -d $* ] || $(MAKE) -C $*  

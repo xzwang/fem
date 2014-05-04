@@ -98,6 +98,8 @@ int float_fft_dft(float *dat, int cnt)
 		return -3;
 	}
 	fft->init = F_DFT;
+	/* fprintf(stderr, "%s\n", fftwf_export_wisdom_to_string()); */
+	/* fftwf_export_wisdom_to_filename("wisdom"); */
 
 	fftwf_execute(plan);
 

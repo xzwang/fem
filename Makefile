@@ -23,21 +23,21 @@ export NM := $(CROSS_COMPILE)nm
 export RANLIB := $(CROSS_COMPILE)ranlib
 export STRIP := $(CROSS_COMPILE)strip
 export SIZE := $(CROSS_COMPILE)size
-export CFLAGS := -I$(TOP)/common
+export CFLAGS := -I$(TOP)/common	#-Wpointer-arith
 export LDFLAGS := -L$(TOP)/common -lfem
 
 
 #####################IMAGE DIR#########################
 export PLATFORMDIR := $(TOP)/$(PLATFORM)
 export INSTALLDIR := $(PLATFORMDIR)/install
-export TARGETDIR := $(PLATFORMDIR)/target
+export TARGETDIR := $(PLATFORMDIR)/rootfs
 
 include .config
 include rules/config.mk
+obj-configure := $(foreach obj, $(obj-y), $(obj)-configure)
 obj-clean := $(foreach obj,$(obj-y) $(obj-n),$(obj)-clean)
 obj-install := $(foreach obj,$(obj-y),$(obj)-install)
 obj-distclean := $(foreach obj,$(obj-y) $(obj-n),$(obj)-distclean)
-
 
 all: build $(obj-y)
 
@@ -60,9 +60,19 @@ install: clean_target $(obj-install)
 	for dir in $(wildcard $(patsubst %,$(INSTALLDIR)/%,$(obj-y))); do \
 	(cd $${dir} && tar cpf - .) | (cd $(TARGETDIR) && tar xpf -)\
 	done
-
+	mkdir -p $(TARGETDIR)/dev
+	sudo mknod $(TARGETDIR)/dev/console c 5 1
+	sudo mknod $(TARGETDIR)/dev/null c 1 3
+	sudo mknod $(TARGETDIR)/dev/nvram c 229 0
+	mkdir -p $(TARGETDIR)/proc
+	mkdir -p $(TARGETDIR)/sys
+	mkdir -p $(TARGETDIR)/tmp
+	mkdir -p $(TARGETDIR)/mnt
+	mkdir -p $(TARGETDIR)/home
+	cp -aRf $(PLATFORM)/lib $(TARGETDIR)/
+	cp -aRf $(PLATFORM)/etc $(TARGETDIR)/etc
 
 include rules/all.mk
-.PHONY:	all build clean
+.PHONY:	all build clean $(obj-y) $(obj-clean) $(obj-install) $(obj-distclean) $(obj-configure)
 .PHONY:	dummy
 
