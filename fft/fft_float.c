@@ -9,13 +9,6 @@
 #include "fft.h"
 
 static struct fft_drv fft_drv;
-static enum {
-	F_NONE = 0,
-	F_INIT,
-	F_DFT,
-	F_IDFT,
-	F_END,
-};
 
 /*****************************************************************
 * @Function	float_fft_init  - 初始化FFT-DFT参数,分配内存
@@ -34,9 +27,11 @@ float *float_fft_init(int cnt, int flags)
 	}
 	if (flags == DFT_1D_C2C) {
 		fftw = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * cnt);
+		memset(fftw, 0x00, sizeof(fftwf_complex)*cnt);
 	}
 	else if (flags == DFT_1D_R2C) {
 		fftw = fftwf_malloc(sizeof(fftwf_complex) * (cnt/2 + 1));
+		memset(fftw, 0x00, sizeof(fftwf_complex) * (cnt/2 + 1));
 	}
 	else {
 		fprintf(stderr, "%s flags invaild\n", __FUNCTION__);
@@ -69,20 +64,23 @@ int float_fft_dft(float *dat, int cnt)
 {
 	struct fft_drv *fft = &fft_drv;
 	float *in = NULL;
-	int n = cnt;
 	fftwf_plan plan;
 
 	if (fft->init == F_NONE) {
 		return -1;
 	}
-	if (!dat || cnt != fft->sum) {
 
+	if (cnt > fft->sum || !dat) {
 		return -2;
 	}
+	/*
+	 * if (cnt <= fft->sum)){;}-->If the actual length is short,
+	 * zero padding will be used
+	 */
 
 	/* 实数DFT变换 */
 	if (fft->flags == DFT_1D_R2C) {
-		plan = fftwf_plan_dft_r2c_1d(cnt, dat, (fftwf_complex *)fft->dat, FFTW_ESTIMATE);
+		plan = fftwf_plan_dft_r2c_1d(fft->sum, dat, (fftwf_complex *)fft->dat, FFTW_ESTIMATE);
 		if (!plan) {
 			return -3;
 		}
@@ -90,11 +88,11 @@ int float_fft_dft(float *dat, int cnt)
 	/* 复数DFT变换 */
 	else if (fft->flags == DFT_1D_C2C) {
 		in = (float *)fft->dat;
-		while (n--) {
+		while (cnt--) {
 			*in++ = *dat++;
 			*in++ = 0x0;
 		}
-		plan = fftwf_plan_dft_1d(cnt, (fftwf_complex *)fft->dat, (fftwf_complex *)fft->dat, FFTW_FORWARD, FFTW_ESTIMATE);
+		plan = fftwf_plan_dft_1d(fft->sum, (fftwf_complex *)fft->dat, (fftwf_complex *)fft->dat, FFTW_FORWARD, FFTW_ESTIMATE);
 	}
 	else {
 		return -3;
@@ -146,9 +144,9 @@ int float_fft_clear(void)
 
 int float_dft_amp_and_phase(int fs, int f0, struct fft_t *fft_t)
 {
-	float P, K, F;
+	float K, F;
 	float *rl, *ig;
-	int n;
+	int oft;
 	struct fft_drv *fft = &fft_drv;
 
 	if (fft->init != F_DFT) {
@@ -156,16 +154,16 @@ int float_dft_amp_and_phase(int fs, int f0, struct fft_t *fft_t)
 	}
 
 	/* PI = 4.0*atan(1.0); P = 180/PI 弧度 */
-	P = 180/(4.0*atan(1.0));
+	/* P = 180/(4.0*atan(1.0)); */
 	/* DFT第0个点为直流分量,幅值=An/N, 其他点为An/(N/2) */
 	K = 2.0/fft->sum;
 	/* 频率分辨率 */
 	F = (float)fs/fft->sum;
 
 	/* f0 对应频谱点号 */
-	n = f0/F;
+	oft = f0/F;
 
-	rl = (float *)fft->dat + n*2;
+	rl = (float *)fft->dat + oft*2;
 	ig = rl+1;
 
 
@@ -236,3 +234,41 @@ int float_fast_goerztel_algorithm(float *dat, int cnt, int f0, int fs, struct ff
 	return 0;
 }
 
+
+int fftw_data_plot(char *fname, float *dat, int fs, int cnt)
+{
+	FILE *fp = NULL;
+	int i;
+	float *rl, *ig;
+	float K,An, dB, Pn;
+	int freq;
+
+	if ((fp = fopen(fname, "w+")) == NULL) {
+		return -1;
+	}
+
+	fprintf(fp, "#num\tfreq\tmag\tmagdB\tphase\n");
+
+	rl = (float *)&dat[0];
+	ig = (float *)&dat[1];
+	/* P = 180/(4.0 * atan(1.0)); */
+	K = (float)2/cnt;
+
+	for (i = 0; i < cnt; i++)
+	{
+		freq = (fs/cnt) * i;
+		An = sqrtf((*rl) * (*rl) + (*ig) * (*ig));
+		An *= K;
+		dB = 20 * log10f(An);
+		Pn = atan2f(*ig, *rl);
+		/* Pn *= P; */ //rad
+
+		fprintf(fp, "%d %d %f %f %f\n", i, freq, An, dB, Pn);
+		rl+=2;
+		ig+=2;
+	}
+
+	fclose(fp);
+
+	return 0;
+}

@@ -44,40 +44,40 @@ int write_raw_txt(char *fname, float *data, int cnt)
 }
 
 #define DEBUG
-int fftw_data_plot(char *fname, float *dat, int cnt)
-{
-	FILE *fp = NULL;
-	int i = 0;
-	float *rl, *ig;
-	float K,An, dB, Pn, P;
+/* int fftw_data_plot(char *fname, float *dat, int cnt) */
+/* { */
+	/* FILE *fp = NULL; */
+	/* int i = 0; */
+	/* float *rl, *ig; */
+	/* float K,An, dB, Pn, P; */
 
-	if ((fp = fopen(fname, "w+")) == NULL) {
-		return -1;
-	}
+	/* if ((fp = fopen(fname, "w+")) == NULL) { */
+		/* return -1; */
+	/* } */
 
-	fprintf(fp, "#num\t幅度\t幅度\t相频\n");
+	/* fprintf(fp, "#num\t幅度\t幅度\t相频\n"); */
 
-	rl = (float *)&dat[0];
-	ig = (float *)&dat[1];
-	P = 180/(4.0 * atan(1.0));
-	K = (float)2/cnt;
-	while (cnt--)
-	{
-		An = sqrtf((*rl) * (*rl) + (*ig) * (*ig));
-		An *= K;
-		dB = 20 * log10f(An);
-		Pn = atan2f(*ig, *rl);
-		/* Pn *= P; */ //rad
+	/* rl = (float *)&dat[0]; */
+	/* ig = (float *)&dat[1]; */
+	/* P = 180/(4.0 * atan(1.0)); */
+	/* K = (float)2/cnt; */
+	/* while (cnt--) */
+	/* { */
+		/* An = sqrtf((*rl) * (*rl) + (*ig) * (*ig)); */
+		/* An *= K; */
+		/* dB = 20 * log10f(An); */
+		/* Pn = atan2f(*ig, *rl); */
+		/* [>Pn *= P;<] //rad */
 
-		fprintf(fp, "%d %f %f %f\n", i++, An, dB, Pn);
-		rl+=2;
-		ig+=2;
-	}
+		/* fprintf(fp, "%d %f %f %f\n", i++, An, dB, Pn); */
+		/* rl+=2; */
+		/* ig+=2; */
+	/* } */
 
-	fclose(fp);
+	/* fclose(fp); */
 
-	return 0;
-}
+	/* return 0; */
+/* } */
 
 float *sinx_gen(int cnt, float amp, float p, int fs, int f0)
 {
@@ -162,8 +162,8 @@ int main(int argc, char *argv[])
 	int cnt;
 	float *dat1, *dat2;
 	struct timeval tv1, tv2;
-	int n = 1;
 	struct fft_t fft;
+	int fs = 24000, f0 = 64;;
 
 	if (argc < 2) {
 		fprintf(stderr, "fft <filename.txt>\n");
@@ -199,25 +199,25 @@ int main(int argc, char *argv[])
 			ret = FFT_DFT(fft1, cnt);
 			if (ret >= 0) {
 				FFT_DFT_COPY(dat2);
-				fftw_data_plot("res1.dat", dat2, cnt);
-				FFT_DFT_AMP_PHA(24000, 64, &fft);
+				fftw_data_plot("res1.dat", dat2, fs, cnt);
+				FFT_DFT_AMP_PHA(fs, f0, &fft);
 				fprintf(stderr, "FFT 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
 			}
 			ret = FFT_DFT(fft2, cnt);
 			if (ret >= 0) {
 				FFT_DFT_COPY(dat2);
-				fftw_data_plot("res2.dat", dat2, cnt);
-				FFT_DFT_AMP_PHA(24000, 64, &fft);
+				fftw_data_plot("res2.dat", dat2, fs, cnt);
+				FFT_DFT_AMP_PHA(fs, f0, &fft);
 				fprintf(stderr, "FFT 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
 			}
 		/* } */
 		/* gettimeofday(&tv2, NULL); */
 		/* fprintf(stderr, "FFT-DFT :%ldus\n", tv2.tv_sec*1000000+tv2.tv_usec - tv1.tv_sec*1000000-tv1.tv_usec); */
 		// fast algorithm
-		FAST_GOERZTEL_DFT(fft1, cnt, 64, 24000, &fft);
+		FAST_GOERZTEL_DFT(fft1, cnt, f0, fs, &fft);
 		fprintf(stderr, "GOERZTEL:%f %f\n", fft.mag, fft.phase);
 
-		FAST_GOERZTEL_DFT(fft2, cnt, 64, 24000, &fft);
+		FAST_GOERZTEL_DFT(fft2, cnt, f0, fs, &fft);
 		fprintf(stderr, "GOERZTEL:%f %f\n", fft.mag, fft.phase);
 	}
 	free(dat2);

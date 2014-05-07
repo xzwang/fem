@@ -17,10 +17,6 @@
 
 #define FLOAT_FFT
 
-enum{
-	DFT_1D_C2C,	/* 1维复数DFT变换 */
-	DFT_1D_R2C,	/* 1维实数DFT变换 */
-};
 
 struct fft_drv {
 	int flags;	/* 变换类型C2C/R2C */
@@ -28,6 +24,17 @@ struct fft_drv {
 	int sum;	/* 变化长度 */
 	void *dat;	/* 变换数据缓存,空间由type和sum决定 */
 };
+
+/* DFT types */
+#define DFT_1D_C2C	0x01	/* 1维复数DFT变换 */
+#define DFT_1D_R2C	0x02	/* 1维实数DFT变换 */
+
+/* FFT process */
+#define F_NONE	0x00
+#define F_INIT	0x01
+#define	F_DFT	0x02
+#define	F_IDFT	0x03
+#define	F_END	0x04
 
 struct fft_t {
 #ifdef FLOAT_FFT
@@ -55,7 +62,7 @@ extern int float_fft_idft(float *dat, int cnt);
 extern int float_fft_clear(void);
 extern int float_dft_amp_and_phase(int fs, int f0, struct fft_t *fft_t);
 extern int float_fast_goerztel_algorithm(float *dat, int cnt, int f0, int fs, struct fft_t *fft_t);
-
+extern int fftw_data_plot(char *fname, float *dat, int fs, int cnt);
 
 extern double *double_fft_init(int cnt, int flags);
 extern int double_fft_dft(double *dat, int cnt);
