@@ -9,9 +9,7 @@
 #include "fft.h"
 
 static struct fft_drv fft_drv;
-static fftwf_plan plan;
-
-enum {
+static enum {
 	F_NONE = 0,
 	F_INIT,
 	F_DFT,
@@ -72,6 +70,7 @@ int float_fft_dft(float *dat, int cnt)
 	struct fft_drv *fft = &fft_drv;
 	float *in = NULL;
 	int n = cnt;
+	fftwf_plan plan;
 
 	if (fft->init == F_NONE) {
 		return -1;
@@ -84,6 +83,9 @@ int float_fft_dft(float *dat, int cnt)
 	/* 实数DFT变换 */
 	if (fft->flags == DFT_1D_R2C) {
 		plan = fftwf_plan_dft_r2c_1d(cnt, dat, (fftwf_complex *)fft->dat, FFTW_ESTIMATE);
+		if (!plan) {
+			return -3;
+		}
 	}
 	/* 复数DFT变换 */
 	else if (fft->flags == DFT_1D_C2C) {
@@ -137,7 +139,6 @@ int float_fft_clear(void)
 		fftwf_free(fft->dat);
 	}
 
-	/* fftwf_destroy_plan(plan); */
 	memset(fft, 0x0, sizeof(struct fft_drv));
 
 	return 0;

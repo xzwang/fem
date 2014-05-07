@@ -20,15 +20,16 @@ endif
 DEBUG= -g -Wall
 FFTW=fft
 SRC=fem-fft.c
+OBJ= fft_float.o# fft_double.o
 LIB=libfft.a
 
 all: $(FFTW)
 
-$(LIB):fft_float.o
+$(LIB):$(OBJ)
 
 	$(AR) r $@ $?
 
-$(FFTW):$(SRC) fft_float.o
+$(FFTW):$(SRC) $(OBJ)
 	$(CC) -o $@ $(DEBUG) $(CFLAGS) $^ $(LDFLAGS)
 
 clean:
