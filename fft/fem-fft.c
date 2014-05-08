@@ -124,6 +124,7 @@ int fem_raw_test(void)
 	float *out;
 	int fs = 24000, f0 = 64;
 	float *coeff;
+	struct fft_t fft;
 
 	raw1 = malloc(sizeof(float) * POINT);
 	if (raw1 == NULL)
