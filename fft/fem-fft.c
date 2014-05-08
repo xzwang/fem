@@ -1,5 +1,6 @@
-#include "fft.h"
 #include <sys/time.h>
+#include "fft.h"
+#include "firfilter.h"
 
 int read_raw_txt(char *fname, float *fft1, float *fft2)
 {
@@ -44,41 +45,6 @@ int write_raw_txt(char *fname, float *data, int cnt)
 }
 
 #define DEBUG
-/* int fftw_data_plot(char *fname, float *dat, int cnt) */
-/* { */
-	/* FILE *fp = NULL; */
-	/* int i = 0; */
-	/* float *rl, *ig; */
-	/* float K,An, dB, Pn, P; */
-
-	/* if ((fp = fopen(fname, "w+")) == NULL) { */
-		/* return -1; */
-	/* } */
-
-	/* fprintf(fp, "#num\t幅度\t幅度\t相频\n"); */
-
-	/* rl = (float *)&dat[0]; */
-	/* ig = (float *)&dat[1]; */
-	/* P = 180/(4.0 * atan(1.0)); */
-	/* K = (float)2/cnt; */
-	/* while (cnt--) */
-	/* { */
-		/* An = sqrtf((*rl) * (*rl) + (*ig) * (*ig)); */
-		/* An *= K; */
-		/* dB = 20 * log10f(An); */
-		/* Pn = atan2f(*ig, *rl); */
-		/* [>Pn *= P;<] //rad */
-
-		/* fprintf(fp, "%d %f %f %f\n", i++, An, dB, Pn); */
-		/* rl+=2; */
-		/* ig+=2; */
-	/* } */
-
-	/* fclose(fp); */
-
-	/* return 0; */
-/* } */
-
 float *sinx_gen(int cnt, float amp, float p, int fs, int f0)
 {
 #define N	1024
@@ -111,26 +77,23 @@ void sinx_free(float *sinx)
 		free(sinx);
 }
 
-#define TXT_NAME	"./64_347.txt"
-#define POINT		(1000*24 + 10)
-
-#if 0
-int main(void)
+int sin_test(void)
 {
 	float *sinx, *dat1, *dat2;
 	int cnt =1024;
 	int fs = 1024;
 	int f0 = 64;
-	float amp, ph;
+	float amp = 12.5, ph = 1.7;
 	int ret;
+	struct fft_t fft;
 
-	sinx = sinx_gen(cnt, 12.75, 1.7, fs, f0);
+	sinx = sinx_gen(cnt, amp, ph, fs, f0);
 	if (sinx == NULL)
 	{
-		exit(0);
+		return 0;
 	}
 
-	write_raw_txt("sinx.txt", sinx, cnt);
+	write_raw_txt("sin_raw.dat", sinx, cnt);
 	dat2 = (float *)malloc(sizeof(float)*2*cnt);
 
 	if ((dat1 = FFT_INIT(cnt, DFT_1D_C2C)) != NULL)
@@ -138,96 +101,117 @@ int main(void)
 		ret = FFT_DFT(sinx, cnt);
 		if (ret >= 0) {
 			FFT_DFT_COPY(dat2);
-			fftw_data_plot("Sinx.dat", dat2, cnt);
+			fftw_data_plot("Sinx.dat", dat2, fs, cnt);
 		}
-		/* if (ret >= 0) { */
-		/* frequency_domain_analysis("fem-dat1.txt", dat1, cnt); */
-		/* ret = FFT_DFT_COPY(dat2); */
-		/* frequency_domain_analysis("fem-dat2.txt", dat2, cnt); */
-		/* } */
-		FFT_DFT_AMP_PHA(fs, f0, &amp, &ph);
-		fprintf(stderr, "幅值:%f\t相位:%f\n", amp, ph);
+		FFT_DFT_AMP_PHA(fs, f0, &fft);
+		fprintf(stderr, "幅值:%f\t相位:%f\n", fft.mag, fft.phase);
+
+		FFT_CLR();
 	}
 	free(dat2);
-	sinx_free(sinx);
-	FFT_CLR();
 
+	sinx_free(sinx);
 	return 0;
 }
-#else
-int main(int argc, char *argv[])
+
+int fem_raw_test(void)
 {
-	float *fft1, *fft2;
-	int ret = -1;
-	int cnt;
-	float *dat1, *dat2;
-	struct timeval tv1, tv2;
-	struct fft_t fft;
-	int fs = 24000, f0 = 64;;
+	#define TXT_NAME	"./64_347.txt"
+	#define POINT		(1000*24 + 10)
 
-	if (argc < 2) {
-		fprintf(stderr, "fft <filename.txt>\n");
-		exit(0);
-	}
+	float *raw1, *raw2;
+	int cnt, ret;
+	float *out;
+	int fs = 24000, f0 = 64;
+	float *coeff;
 
-	fft1 = malloc(sizeof(float) * POINT);
-	if (fft1 == NULL)
+	raw1 = malloc(sizeof(float) * POINT);
+	if (raw1 == NULL)
 	{
-		fprintf(stderr, "fft1 memory alloc failed\n");
+		fprintf(stderr, "raw data 1 memory alloc failed\n");
 		goto exit0;
 	}
 
-	fft2 = malloc(sizeof(float) * POINT);
-	if (fft2 == NULL)
+	raw2 = malloc(sizeof(float) * POINT);
+	if (raw2 == NULL)
 	{
-		fprintf(stderr, "fft2 memory alloc failed\n");
+		fprintf(stderr, "raw data 2 memory alloc failed\n");
 		goto exit1;
 	}
 
-	cnt = read_raw_txt(argv[1], fft1, fft2);
+	cnt = read_raw_txt(TXT_NAME, raw1, raw2);
 	if (cnt < 0) {
 		goto exit2;
 	}
 
-	write_raw_txt("raw1.dat", fft1, cnt);
-	write_raw_txt("raw2.dat", fft2, cnt);
-	dat2 = (float *)malloc(sizeof(float) * cnt *2);
-	if ((dat1 = FFT_INIT(cnt, DFT_1D_C2C)) != NULL)
+	write_raw_txt("raw1.dat", raw1, cnt);
+	write_raw_txt("raw2.dat", raw2, cnt);
+
+
+	// Goerztel algorithm test
+	FAST_GOERZTEL_DFT(raw1, cnt, f0, fs, &fft);
+	fprintf(stderr, "raw1  GOERZTEL:%f %f\n", fft.mag, fft.phase);
+
+	FAST_GOERZTEL_DFT(raw2, cnt, f0, fs, &fft);
+	fprintf(stderr, "raw2 GOERZTEL:%f %f\n", fft.mag, fft.phase);
+
+	// FFTW test
+	out = (float *)malloc(sizeof(float) * cnt * 2);
+	if ((FFT_INIT(cnt, DFT_1D_C2C)) != NULL)
 	{
-		/* gettimeofday(&tv1, NULL); */
-		/* while (n--) { */
-			ret = FFT_DFT(fft1, cnt);
-			if (ret >= 0) {
-				FFT_DFT_COPY(dat2);
-				fftw_data_plot("res1.dat", dat2, fs, cnt);
-				FFT_DFT_AMP_PHA(fs, f0, &fft);
-				fprintf(stderr, "FFT 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
-			}
-			ret = FFT_DFT(fft2, cnt);
-			if (ret >= 0) {
-				FFT_DFT_COPY(dat2);
-				fftw_data_plot("res2.dat", dat2, fs, cnt);
-				FFT_DFT_AMP_PHA(fs, f0, &fft);
-				fprintf(stderr, "FFT 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
-			}
-		/* } */
-		/* gettimeofday(&tv2, NULL); */
-		/* fprintf(stderr, "FFT-DFT :%ldus\n", tv2.tv_sec*1000000+tv2.tv_usec - tv1.tv_sec*1000000-tv1.tv_usec); */
-		// fast algorithm
-		FAST_GOERZTEL_DFT(fft1, cnt, f0, fs, &fft);
-		fprintf(stderr, "GOERZTEL:%f %f\n", fft.mag, fft.phase);
+		ret = FFT_DFT(raw1, cnt);
+		if (ret >= 0) {
+			FFT_DFT_COPY(out);
+			fftw_data_plot("out1.dat", out, fs, cnt);
+			FFT_DFT_AMP_PHA(fs, f0, &fft);
+			fprintf(stderr, "raw1 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
+		}
 
-		FAST_GOERZTEL_DFT(fft2, cnt, f0, fs, &fft);
-		fprintf(stderr, "GOERZTEL:%f %f\n", fft.mag, fft.phase);
+		ret = FFT_DFT(raw2, cnt);
+		if (ret >= 0) {
+			FFT_DFT_COPY(out);
+			fftw_data_plot("res2.dat", out, fs, cnt);
+			FFT_DFT_AMP_PHA(fs, f0, &fft);
+			fprintf(stderr, "raw2 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
+		}
+
+		FFT_CLR();
 	}
-	free(dat2);
 
-	FFT_CLR();
+	//pre-filtel(LOW_PASS) FFTW test
+	int fc1 = 1000; //the cutoff frequency
+	int fc2 = 5000;
+	int coeff_len = 31;
+	coeff = alloc_filter_coeff(LOW_PASS, HAMMING, coeff_len, fs, fc1, fc2);
+	if (!coeff) {
+		if (float_fir_filter(raw1, raw1, cnt, coeff, coeff_len) > 0) {
+			if ( FFT_INT(cnt, DFT_1D_C2C) != NULL) {
+
+				FFT_DFT(raw1, cnt);
+				FFT_DFT_COPY(out);
+				fftw_data_plot("fir-out1.dat", out, fs, cnt);
+				FFT_DFT_AMP_PHA(fs, f0, &fft);
+				fprintf(stderr, "raw1 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
+			}
+
+		}
+
+		free_filler_coeff(coeff);
+	}
+
+
+	free(out);
+
 exit2:
-	free(fft2);
+	free(raw1);
 exit1:
-	free(fft1);
+	free(raw2);
 exit0:
 	return 0;
+}
+
+int main(int argc, char *argv[])
+{
+
 }
 #endif
