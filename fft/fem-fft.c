@@ -83,7 +83,7 @@ int sin_test(void)
 	int cnt =1024;
 	int fs = 1024;
 	int f0 = 64;
-	float amp = 12.5, ph = 1.7;
+	float amp = 12.5, ph = 180;
 	int ret;
 	struct fft_t fft;
 
@@ -101,10 +101,10 @@ int sin_test(void)
 		ret = FFT_DFT(sinx, cnt);
 		if (ret >= 0) {
 			FFT_DFT_COPY(dat2);
-			fftw_data_plot("Sinx.dat", dat2, fs, cnt);
+			fftw_data_plot("sin.dat", dat2, fs, cnt);
 		}
 		FFT_DFT_AMP_PHA(fs, f0, &fft);
-		fprintf(stderr, "幅值:%f\t相位:%f\n", fft.mag, fft.phase);
+		fprintf(stderr, "Sin: %f\t:%f\n", fft.mag, fft.phase);
 
 		FFT_CLR();
 	}
@@ -151,7 +151,7 @@ int fem_raw_test(void)
 
 	// Goerztel algorithm test
 	FAST_GOERZTEL_DFT(raw1, cnt, f0, fs, &fft);
-	fprintf(stderr, "raw1  GOERZTEL:%f %f\n", fft.mag, fft.phase);
+	fprintf(stderr, "raw1 GOERZTEL:%f %f\n", fft.mag, fft.phase);
 
 	FAST_GOERZTEL_DFT(raw2, cnt, f0, fs, &fft);
 	fprintf(stderr, "raw2 GOERZTEL:%f %f\n", fft.mag, fft.phase);
@@ -171,7 +171,7 @@ int fem_raw_test(void)
 		ret = FFT_DFT(raw2, cnt);
 		if (ret >= 0) {
 			FFT_DFT_COPY(out);
-			fftw_data_plot("res2.dat", out, fs, cnt);
+			fftw_data_plot("out2.dat", out, fs, cnt);
 			FFT_DFT_AMP_PHA(fs, f0, &fft);
 			fprintf(stderr, "raw2 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
 		}
@@ -180,24 +180,26 @@ int fem_raw_test(void)
 	}
 
 	//pre-filtel(LOW_PASS) FFTW test
-	int fc1 = 1000; //the cutoff frequency
-	int fc2 = 5000;
+	int fc1 = 5000; //the cutoff frequency
+	int fc2 = 0;
 	int coeff_len = 31;
 	coeff = alloc_filter_coeff(LOW_PASS, HAMMING, coeff_len, fs, fc1, fc2);
-	if (!coeff) {
-		if (float_fir_filter(raw1, raw1, cnt, coeff, coeff_len) > 0) {
-			if ( FFT_INT(cnt, DFT_1D_C2C) != NULL) {
+	if (coeff != NULL) {
+		if (float_fir_filter(raw1, raw1, cnt, coeff, coeff_len) == 0) {
+			write_raw_txt("raw11.dat", raw1, cnt);
+			fprintf(stderr, ">>>>\n");
+			if ( FFT_INIT(cnt, DFT_1D_C2C) != NULL) {
 
 				FFT_DFT(raw1, cnt);
 				FFT_DFT_COPY(out);
 				fftw_data_plot("fir-out1.dat", out, fs, cnt);
 				FFT_DFT_AMP_PHA(fs, f0, &fft);
-				fprintf(stderr, "raw1 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
+				fprintf(stderr, "FIR 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
 			}
 
 		}
 
-		free_filler_coeff(coeff);
+		free_filter_coeff(coeff);
 	}
 
 
@@ -214,5 +216,12 @@ exit0:
 int main(int argc, char *argv[])
 {
 
+	sin_test();
+
+	fprintf(stderr, "Generate filtel coeffient\n");
+	fir_test();
+
+	fem_raw_test();
+
+	return 0;
 }
-#endif

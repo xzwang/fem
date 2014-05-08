@@ -161,7 +161,7 @@ static int float_create_window(int type, int length, float **coeff)
 
 int float_fir_filter(float *in, float *out, int length, float *coeff, int coeff_num)
 {
-	float *buffer;
+	float *buffer, msum;
 	int i, n;
 	int order = coeff_num - 1;
 
@@ -171,14 +171,18 @@ int float_fir_filter(float *in, float *out, int length, float *coeff, int coeff_
 	}
 
 	memset(buffer, 0x0, sizeof(float) * coeff_num);
+
+	/* Support for in-situ operation */
 	/* memset(out, 0x0, sizeof(float) * length); */
 
 	buffer[0] = *in++;
 
 	for (n = 0; n < length; n++) {
 
+		msum = 0.0;
 		for (i = 0; i < coeff_num; i++)
-			out[n] += buffer[i] * coeff[i];
+			msum += buffer[i] * coeff[i];
+		out[n] = msum;
 
 		for (i = order; i > 0; i--)
 			buffer[i] = buffer[i-1];
@@ -197,11 +201,7 @@ float *alloc_filter_coeff(int filter_type, int window_type, int length, int fs, 
 	float *sinc = NULL;;
 	int n, ret;
 
-	if (fc1 > fc2) {
-		return NULL;
-	}
-
-	switch(filter_type) {
+	switch (filter_type) {
 		case LOW_PASS:
 		case HIGH_PASS:
 			sinc = float_lh_sinc(filter_type, length, fs, fc1);
@@ -222,6 +222,7 @@ float *alloc_filter_coeff(int filter_type, int window_type, int length, int fs, 
 	if (ret == 0) {
 		for (n = 0; n < length; n++) {
 			coeff[n] *= sinc[n];
+			fprintf(stderr, "%d, %f %f\n", n, sinc[n], coeff[n]);
 		}
 	}
 
@@ -236,31 +237,124 @@ void free_filter_coeff(float *coeff)
 		free(coeff);
 }
 
-int fir_test(void)
+static int plot_filter(char *fname, float *dat, int fs, int cnt)
 {
-	int window_len = 31;
+	FILE *fp = NULL;
+	int i;
+	float *rl, *ig;
+	float K,An, dB, Pn;
+	float freq;
+
+	if ((fp = fopen(fname, "w+")) == NULL) {
+		return -1;
+	}
+
+	fprintf(fp, "#num\tfreq\tmag\tmagdB\tphase\n");
+
+	rl = (float *)&dat[0];
+	ig = (float *)&dat[1];
+	/* P = 180/(4.0 * atan(1.0)); */
+	K = (float)2/cnt;
+
+	for (i = 0; i < cnt; i++)
+	{
+		freq = (float)fs * i / cnt;
+		An = sqrtf((*rl) * (*rl) + (*ig) * (*ig));
+		/* An *= K; */
+		dB = 20 * log10f(An);
+		Pn = atan2f(*ig, *rl);
+		/* Pn *= P; */ //rad
+
+		fprintf(fp, "%d %f %f %f %f\n", i, freq, An, dB, Pn);
+		rl+=2;
+		ig+=2;
+	}
+
+	fclose(fp);
+
+	return 0;
+}
+void fir_out(char *fname, float *coeff, int coeff_num, int fs)
+{
+	float *out;
 	int length = 2048;
-	int fs = 24000;
-	int fc1 = 5000;
-	int fc2 = 15000;
-	float *coeff, *out;
-
-
-	coeff = alloc_filter_coeff(LOW_PASS, HAMMING, window_len, fs, fc1, fc2);
-	if (!coeff)
-		return 0;
 
 	out = (float *)malloc(sizeof(float) * 2 * length);
 	if (FFT_INIT(length, DFT_1D_C2C) != NULL) {
-		FFT_DFT(coeff, window_len);
+		FFT_DFT(coeff, coeff_num);
 		FFT_DFT_COPY(out);
 
 		FFT_CLR();
 	}
-	fftw_dat_plot("sinc.dat", out, fs, length);
+	plot_filter(fname, out, fs, length);
 
 	free(out);
-	free_filter_coeff(coeff);
+}
+
+int fir_test(void)
+{
+	int window_len = 31;
+	int fs = 24000;
+	int fc1 = 2000;
+	int fc2 = 8000;
+	float *coeff;
+
+	// LOW-PASS
+	coeff = alloc_filter_coeff(LOW_PASS, HAMMING, window_len, fs, fc1, fc2);
+	if (coeff != NULL) {
+		fir_out("lp_hamming.dat", coeff, window_len, fs);
+		free_filter_coeff(coeff);
+	}
+
+	coeff = alloc_filter_coeff(LOW_PASS, HANNING, window_len, fs, fc1, fc2);
+	if (coeff != NULL) {
+		fir_out("lp_hanning.dat", coeff, window_len, fs);
+		free_filter_coeff(coeff);
+	}
+
+	coeff = alloc_filter_coeff(LOW_PASS, BLACKMAN, window_len, fs, fc1, fc2);
+	if (coeff != NULL) {
+		fir_out("lp_blkman.dat", coeff, window_len, fs);
+		free_filter_coeff(coeff);
+	}
+
+	//High-PASS
+	coeff = alloc_filter_coeff(HIGH_PASS, HAMMING, window_len, fs, fc1, fc2);
+	if (coeff != NULL) {
+		fir_out("hp_hamming.dat", coeff, window_len, fs);
+		free_filter_coeff(coeff);
+	}
+
+	coeff = alloc_filter_coeff(HIGH_PASS, HANNING, window_len, fs, fc1, fc2);
+	if (coeff != NULL) {
+		fir_out("hp_hanning.dat", coeff, window_len, fs);
+		free_filter_coeff(coeff);
+	}
+
+	coeff = alloc_filter_coeff(HIGH_PASS, BLACKMAN, window_len, fs, fc1, fc2);
+	if (coeff != NULL) {
+		fir_out("hp_blkman.dat", coeff, window_len, fs);
+		free_filter_coeff(coeff);
+	}
+
+	//BAND_PASS
+	coeff = alloc_filter_coeff(BAND_PASS, HAMMING, window_len, fs, fc1, fc2);
+	if (coeff != NULL) {
+		fir_out("bp_hamming.dat", coeff, window_len, fs);
+		free_filter_coeff(coeff);
+	}
+
+	coeff = alloc_filter_coeff(BAND_PASS, HANNING, window_len, fs, fc1, fc2);
+	if (coeff != NULL) {
+		fir_out("bp_hanning.dat", coeff, window_len, fs);
+		free_filter_coeff(coeff);
+	}
+
+	coeff = alloc_filter_coeff(BAND_PASS, BLACKMAN, window_len, fs, fc1, fc2);
+	if (coeff != NULL) {
+		fir_out("bp_blkman.dat", coeff, window_len, fs);
+		free_filter_coeff(coeff);
+	}
 
 	return 0;
 }
