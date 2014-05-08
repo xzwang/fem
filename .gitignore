@@ -50,6 +50,7 @@ cscope.*
 *.deps*
 *.libs*
 *.l[oa]
+tags
 
 # gnu global files
 GPATH

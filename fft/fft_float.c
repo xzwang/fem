@@ -241,7 +241,7 @@ int fftw_data_plot(char *fname, float *dat, int fs, int cnt)
 	int i;
 	float *rl, *ig;
 	float K,An, dB, Pn;
-	int freq;
+	float freq;
 
 	if ((fp = fopen(fname, "w+")) == NULL) {
 		return -1;
@@ -256,14 +256,14 @@ int fftw_data_plot(char *fname, float *dat, int fs, int cnt)
 
 	for (i = 0; i < cnt; i++)
 	{
-		freq = (fs/cnt) * i;
+		freq = (float)fs * i / cnt;
 		An = sqrtf((*rl) * (*rl) + (*ig) * (*ig));
 		An *= K;
 		dB = 20 * log10f(An);
 		Pn = atan2f(*ig, *rl);
 		/* Pn *= P; */ //rad
 
-		fprintf(fp, "%d %d %f %f %f\n", i, freq, An, dB, Pn);
+		fprintf(fp, "%d %f %f %f %f\n", i, freq, An, dB, Pn);
 		rl+=2;
 		ig+=2;
 	}
