@@ -101,6 +101,23 @@ static float *float_bd_sinc(int type, int length, int fs, int fc1, int fc2)
 	return sinc;
 }
 
+float zero_bessel(float x)
+{
+        float num, fact, i;
+        float result = 1;
+        float x_2 = x/2;
+
+	num = 1;
+	fact = 1;
+        for (i = 1 ; i < 20 ; i++) {
+                num *= x_2 * x_2;
+                fact *= i;
+                result += num / (fact * fact);
+        }
+
+        return result;
+}
+
 static int float_create_window(int type, int length, float **coeff)
 {
 	int n, half;
@@ -195,6 +212,96 @@ int float_fir_filter(float *in, float *out, int length, float *coeff, int coeff_
 	return 0;
 }
 
+int calc_kaiser_params(float ripple, float transwidth, float fs, float *beta)
+{
+        // Calculate delta w
+        float dw = 2 * M_PI * transwidth / fs;
+	int length;
+
+        // Calculate ripple dB
+        float a = -20.0 * log10f(ripple);
+
+        // Calculate filter order
+        int m;
+
+        if (a > 21)
+		m = ceil((a-7.95) / (2.285*dw));
+        else
+		m = ceil(5.79/dw);
+
+        length = m + 1;
+
+        if (a <= 21)
+		*beta = 0.0;
+        else if (a <= 50)
+		*beta = 0.5842 * pow(a-21, 0.4) + 0.07886 * (a-21);
+        else
+		*beta = 0.1102 * (a-8.7);
+
+	return length;
+}
+
+int create_kaiser_window(int length, float beta, float **coeff)
+{
+        int n;
+        float denom = zero_bessel(beta);
+	float *window, val;
+        float m_2 = 0.5 *(length - 1);	//ORDER/2
+
+	window = (float *) malloc(length * sizeof(float));
+	if (window == NULL) {
+		fprintf(stderr, "Could not allocate memory for window\n");
+		return -1;
+	}
+
+        for (n = 0 ; n < length; n++)
+        {
+                val = ((n) - m_2) / m_2;
+                val = 1 - (val * val);
+                window[n] = zero_bessel(beta * sqrtf(val)) / denom;
+        }
+
+	*coeff = window;
+
+        return 0;
+}
+
+float *alloc_kaiser_coeff(int filter_type, int *coeff_len, int fs, int fc1, int fc2)
+{
+	int n, ret;
+	float ripple= 0.001;
+	float transwidth = 800;
+	float beta;
+	float *sinc, *coeff;
+
+	if (filter_type != LOW_PASS) {
+		fprintf(stderr, "kaiser window only suported low-pass\n");
+		return NULL;
+	}
+
+	*coeff_len = calc_kaiser_params(ripple, transwidth, fs, &beta);
+
+	sinc = float_lh_sinc(filter_type, *coeff_len, fs, fc1);
+	if (!sinc) {
+		return NULL;
+	}
+
+	ret = create_kaiser_window(*coeff_len, beta, &coeff);
+	if (ret == 0) {
+		for (n = 0; n < *coeff_len; n++) {
+			coeff[n] *= sinc[n];
+			fprintf(stderr, "kaiser %d, %f %f\n", n, sinc[n], coeff[n]);
+		}
+	}
+	else {
+		coeff = NULL;
+	}
+
+	free(sinc);
+
+	return coeff;
+}
+
 float *alloc_filter_coeff(int filter_type, int window_type, int length, int fs, int fc1, int fc2)
 {
 	float *coeff = NULL;
@@ -225,6 +332,9 @@ float *alloc_filter_coeff(int filter_type, int window_type, int length, int fs, 
 			fprintf(stderr, "%d, %f %f\n", n, sinc[n], coeff[n]);
 		}
 	}
+	else {
+		coeff = NULL;
+	}
 
 	free(sinc);
 
@@ -242,7 +352,7 @@ static int plot_filter(char *fname, float *dat, int fs, int cnt)
 	FILE *fp = NULL;
 	int i;
 	float *rl, *ig;
-	float K,An, dB, Pn;
+	float An, dB, Pn;
 	float freq;
 
 	if ((fp = fopen(fname, "w+")) == NULL) {
@@ -254,9 +364,9 @@ static int plot_filter(char *fname, float *dat, int fs, int cnt)
 	rl = (float *)&dat[0];
 	ig = (float *)&dat[1];
 	/* P = 180/(4.0 * atan(1.0)); */
-	K = (float)2/cnt;
+	/* K = (float)2/cnt; */
 
-	for (i = 0; i < cnt; i++)
+	for (i = 0; i < cnt/2; i++)
 	{
 		freq = (float)fs * i / cnt;
 		An = sqrtf((*rl) * (*rl) + (*ig) * (*ig));
@@ -280,10 +390,9 @@ void fir_out(char *fname, float *coeff, int coeff_num, int fs)
 	int length = 2048;
 
 	out = (float *)malloc(sizeof(float) * 2 * length);
-	if (FFT_INIT(length, DFT_1D_C2C) != NULL) {
+	if (FFT_INIT(length, DFT_1D_R2C) != NULL) {
 		FFT_DFT(coeff, coeff_num);
 		FFT_DFT_COPY(out);
-
 		FFT_CLR();
 	}
 	plot_filter(fname, out, fs, length);
@@ -295,7 +404,7 @@ int fir_test(void)
 {
 	int window_len = 31;
 	int fs = 24000;
-	int fc1 = 2000;
+	int fc1 = 6000;
 	int fc2 = 8000;
 	float *coeff;
 
@@ -315,6 +424,13 @@ int fir_test(void)
 	coeff = alloc_filter_coeff(LOW_PASS, BLACKMAN, window_len, fs, fc1, fc2);
 	if (coeff != NULL) {
 		fir_out("lp_blkman.dat", coeff, window_len, fs);
+		free_filter_coeff(coeff);
+	}
+
+	int kaiser_len;
+	coeff = alloc_kaiser_coeff(LOW_PASS, &kaiser_len, fs, fc1, fc2);
+	if (coeff != NULL) {
+		fir_out("lp_kaiser.dat", coeff, kaiser_len, fs);
 		free_filter_coeff(coeff);
 	}
 
@@ -338,6 +454,8 @@ int fir_test(void)
 	}
 
 	//BAND_PASS
+	fc1 = 3000;
+	fc2 = 9000;
 	coeff = alloc_filter_coeff(BAND_PASS, HAMMING, window_len, fs, fc1, fc2);
 	if (coeff != NULL) {
 		fir_out("bp_hamming.dat", coeff, window_len, fs);

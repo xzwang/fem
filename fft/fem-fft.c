@@ -158,7 +158,7 @@ int fem_raw_test(void)
 
 	// FFTW test
 	out = (float *)malloc(sizeof(float) * cnt * 2);
-	if ((FFT_INIT(cnt, DFT_1D_C2C)) != NULL)
+	if ((FFT_INIT(cnt, DFT_1D_R2C)) != NULL)
 	{
 		ret = FFT_DFT(raw1, cnt);
 		if (ret >= 0) {

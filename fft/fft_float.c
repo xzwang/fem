@@ -27,11 +27,11 @@ float *float_fft_init(int cnt, int flags)
 	}
 	if (flags == DFT_1D_C2C) {
 		fftw = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * cnt);
-		memset(fftw, 0x00, sizeof(fftwf_complex)*cnt);
 	}
 	else if (flags == DFT_1D_R2C) {
-		fftw = fftwf_malloc(sizeof(fftwf_complex) * (cnt/2 + 1));
-		memset(fftw, 0x00, sizeof(fftwf_complex) * (cnt/2 + 1));
+		/* fftw = fftwf_malloc(sizeof(fftwf_complex) * (cnt/2 + 1)); */
+		/* memset(fftw, 0x00, sizeof(fftwf_complex) * (cnt/2 + 1)); */
+		fftw = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * cnt);
 	}
 	else {
 		fprintf(stderr, "%s flags invaild\n", __FUNCTION__);
@@ -78,21 +78,28 @@ int float_fft_dft(float *dat, int cnt)
 	 * zero padding will be used
 	 */
 
+	in = (float *)fft->dat;
+	memset(in, 0x00, sizeof(fftwf_complex) * fft->sum);
+
 	/* 实数DFT变换 */
 	if (fft->flags == DFT_1D_R2C) {
-		plan = fftwf_plan_dft_r2c_1d(fft->sum, dat, (fftwf_complex *)fft->dat, FFTW_ESTIMATE);
+		memcpy(in, dat, sizeof(float) * cnt);
+
+		plan = fftwf_plan_dft_r2c_1d(fft->sum, in, (fftwf_complex *)fft->dat, FFTW_ESTIMATE);
 		if (!plan) {
 			return -3;
 		}
 	}
 	/* 复数DFT变换 */
 	else if (fft->flags == DFT_1D_C2C) {
-		in = (float *)fft->dat;
 		while (cnt--) {
 			*in++ = *dat++;
 			*in++ = 0x0;
 		}
 		plan = fftwf_plan_dft_1d(fft->sum, (fftwf_complex *)fft->dat, (fftwf_complex *)fft->dat, FFTW_FORWARD, FFTW_ESTIMATE);
+		if (!plan) {
+			return -3;
+		}
 	}
 	else {
 		return -3;
