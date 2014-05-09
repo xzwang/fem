@@ -79,7 +79,6 @@ float *coswn(int *f0, float *a, float *ph, int num, int cnt, int fs)
 	float PI = 4.0 * atan(1.0);
 	float *dat;
 	int i, n;
-	float f[4];
 
 	dat = (float *)malloc(sizeof(float) * cnt);
 	if (dat == NULL)
@@ -147,9 +146,6 @@ int sin_test(void)
 
 	write_raw_txt("sin_raw.dat", sinx, cnt);
 
-	FAST_GOERZTEL_DFT(sinx, cnt, f0[0], fs, &fft);
-	fprintf(stderr, "raw1 GOERZTEL:%f %f\n", fft.mag, fft.phase);
-
 	dat2 = (float *)malloc(sizeof(float) * 2 * cnt);
 	if ((dat1 = FFT_INIT(cnt, DFT_1D_C2C)) != NULL)
 	{
@@ -207,11 +203,21 @@ int fem_raw_test(void)
 	write_raw_txt("raw1.dat", raw1, cnt);
 	write_raw_txt("raw2.dat", raw2, cnt);
 
-
 	// Goerztel algorithm test
+	int l = cnt, rand;
+	float *tmp = raw1;
+	float_goerztel_init(cnt, f0, fs);
+	while (l > 10) {
+		rand = random()	% l;
+		/* fprintf(stderr, "rand(%d) = %d\n", l, rand); */
+		float_goerztel_update(tmp, rand);
+		l -= rand;
+		tmp += rand;
+	}
+	float_goerztel_final(tmp, l, &fft);
+	fprintf(stderr, "raw1 GOERZTEL 3th-method %f %f\n", fft.mag, fft.phase);
 	FAST_GOERZTEL_DFT(raw1, cnt, f0, fs, &fft);
 	fprintf(stderr, "raw1 GOERZTEL:%f %f\n", fft.mag, fft.phase);
-
 	FAST_GOERZTEL_DFT(raw2, cnt, f0, fs, &fft);
 	fprintf(stderr, "raw2 GOERZTEL:%f %f\n", fft.mag, fft.phase);
 

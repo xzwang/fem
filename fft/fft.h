@@ -61,8 +61,13 @@ extern int float_fft_dft_copy(float *buf);
 extern int float_fft_idft(float *dat, int cnt);
 extern int float_fft_clear(void);
 extern int float_dft_amp_and_phase(int fs, int f0, struct fft_t *fft_t);
-extern int float_fast_goerztel_algorithm(float *dat, int cnt, int f0, int fs, struct fft_t *fft_t);
 extern int fftw_data_plot(char *fname, float *dat, int fs, int cnt);
+
+extern int float_fast_goerztel_algorithm(float *dat, int cnt, int f0, int fs, struct fft_t *fft_t);
+/* Goerztel three-section(initial->update->fanal) method -> Support real-time computing */
+extern void float_goerztel_init(int cnt, int f0, int fs);
+extern int float_goerztel_update(float *dat, int cnt);
+extern int float_goerztel_final(float *dat, int cnt, struct fft_t *fft);
 
 extern double *double_fft_init(int cnt, int flags);
 extern int double_fft_dft(double *dat, int cnt);

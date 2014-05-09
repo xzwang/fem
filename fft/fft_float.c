@@ -240,6 +240,86 @@ int float_fast_goerztel_algorithm(float *dat, int cnt, int f0, int fs, struct ff
 	return 0;
 }
 
+struct goerztel_algo_t {
+	int length, cnt;
+	float sine;
+	float cosine;
+	float coeff;
+	float q0,q1,q2;
+};
+
+struct goerztel_algo_t gzl_algo;
+
+void float_goerztel_init(int cnt, int f0, int fs)
+{
+	float PI = 4.0 * atan(1.0);
+	float k = (float)(cnt * f0) / fs;
+	float omega = (2.0 * PI * k) / cnt;
+
+	memset(&gzl_algo, 0x0, sizeof(struct goerztel_algo_t));
+
+	gzl_algo.length = cnt;
+
+	/* 进行一次正弦和余弦计算 */
+	gzl_algo.sine = sinf(omega);
+	gzl_algo.cosine = cosf(omega);
+	/* 计算系数 */
+	gzl_algo.coeff = 2.0 * gzl_algo.cosine;
+}
+
+int float_goerztel_update(float *dat, int cnt)
+{
+	int i;
+	struct goerztel_algo_t *gzl = &gzl_algo;
+
+	if (gzl->cnt < gzl->length) {
+		gzl->cnt += cnt;
+
+		for (i = 0; i < cnt; i++) {
+			gzl->q0 = gzl->coeff * gzl->q1 - gzl->q2 + *dat++;
+			gzl->q2 = gzl->q1;
+			gzl->q1 = gzl->q0;
+		}
+
+		return 0;
+	}
+	else {
+		return -1;
+	}
+}
+
+int float_goerztel_final(float *dat, int cnt, struct fft_t *fft)
+{
+	float rl, ig;
+	struct goerztel_algo_t *gzl = &gzl_algo;
+	int i;
+
+	if (cnt > 0 && dat) {
+		gzl->cnt += cnt;
+
+		for (i = 0; i < cnt; i++) {
+			gzl->q0 = gzl->coeff * gzl->q1 - gzl->q2 + *dat++;
+			gzl->q2 = gzl->q1;
+			gzl->q1 = gzl->q0;
+		}
+	}
+
+	if (gzl->cnt == gzl->length) {
+
+		rl = (gzl->q1 - gzl->q2 * gzl->cosine);
+		ig = (gzl->q2 * gzl->sine);
+
+		/* 计算模值和相位 */
+		fft->mag = sqrtf(rl*rl + ig*ig);
+		fft->mag *= (2.0/gzl->cnt);
+		fft->phase = atan2f(ig, rl);
+
+		return 0;
+	}
+	else {
+		return -1;
+	}
+}
 
 int fftw_data_plot(char *fname, float *dat, int fs, int cnt)
 {
