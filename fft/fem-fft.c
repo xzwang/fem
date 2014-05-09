@@ -45,9 +45,60 @@ int write_raw_txt(char *fname, float *data, int cnt)
 }
 
 #define DEBUG
+float *sinwn(int *f0, float *a, float *ph, int num, int cnt, int fs)
+{
+	float PI = 4.0 * atan(1.0);
+	float *dat;
+	int i, n;
+	float f[4];
+
+	dat = (float *)malloc(sizeof(float) * cnt);
+	if (dat == NULL)
+	{
+		return NULL;
+	}
+
+	memset(dat, 0x0, sizeof(float) * cnt);
+
+	for (i = 0; i < num; i++) {
+		f[i] = 2.0 * PI * f0[i]/fs;
+
+	}
+
+	for (n = 0; n < cnt; n++) {
+		dat[n] = 0;
+		for (i = 0; i < num; i++)
+			dat[n] = dat[n] + a[i]*sinf(n * f[i] + ph[i]);
+	}
+
+	return dat;
+}
+
+float *coswn(int *f0, float *a, float *ph, int num, int cnt, int fs)
+{
+	float PI = 4.0 * atan(1.0);
+	float *dat;
+	int i, n;
+	float f[4];
+
+	dat = (float *)malloc(sizeof(float) * cnt);
+	if (dat == NULL)
+	{
+		return NULL;
+	}
+
+	memset(dat, 0x0, sizeof(float) * cnt);
+
+	for (n = 0; n < cnt; n++) {
+		dat[n] = 2;
+		dat[n] = dat[n] + 3*cosf(2*PI*50*n/fs - 0.523) +
+			1.5*cosf(2*PI*75*n/fs + 1.570);
+	}
+
+	return dat;
+}
 float *sinx_gen(int cnt, float amp, float p, int fs, int f0)
 {
-#define N	1024
 	float PI;
 	int i;
 	float *dat;
@@ -64,7 +115,7 @@ float *sinx_gen(int cnt, float amp, float p, int fs, int f0)
 	/* 初始化正弦曲线 */
 	PI = 4.0 * atan(1.0);
 	for (i = 0; i < cnt; i++) {
-		dat[i] = amp * sin(2*PI*f0*i/fs + p);
+		dat[i] = amp * sin(2*PI*f0*i/fs + p * PI/180);
 		/* dat[i] = amp*sin(2*PI*0.25*i)/(PI*i); */
 	}
 
@@ -80,22 +131,26 @@ void sinx_free(float *sinx)
 int sin_test(void)
 {
 	float *sinx, *dat1, *dat2;
-	int cnt =1024;
-	int fs = 1024;
-	int f0 = 64;
-	float amp = 12.5, ph = 180;
+	int cnt = 256;
+	int fs = 256;
+	int f0[3] = {0, 64, 32};
+	float amp[3] = {2, 3.0, 1.5}, ph[3] = {0, 0, 0};
 	int ret;
 	struct fft_t fft;
 
-	sinx = sinx_gen(cnt, amp, ph, fs, f0);
+	sinx = sinwn(f0, amp, ph, 3, cnt, fs);
+	/* sinx = coswn(f0, amp, ph, 3, cnt, fs); */
 	if (sinx == NULL)
 	{
 		return 0;
 	}
 
 	write_raw_txt("sin_raw.dat", sinx, cnt);
-	dat2 = (float *)malloc(sizeof(float)*2*cnt);
 
+	FAST_GOERZTEL_DFT(sinx, cnt, f0[0], fs, &fft);
+	fprintf(stderr, "raw1 GOERZTEL:%f %f\n", fft.mag, fft.phase);
+
+	dat2 = (float *)malloc(sizeof(float) * 2 * cnt);
 	if ((dat1 = FFT_INIT(cnt, DFT_1D_C2C)) != NULL)
 	{
 		ret = FFT_DFT(sinx, cnt);
@@ -103,7 +158,11 @@ int sin_test(void)
 			FFT_DFT_COPY(dat2);
 			fftw_data_plot("sin.dat", dat2, fs, cnt);
 		}
-		FFT_DFT_AMP_PHA(fs, f0, &fft);
+		FFT_DFT_AMP_PHA(fs, f0[0], &fft);
+		fprintf(stderr, "Sin: %f\t:%f\n", fft.mag, fft.phase);
+		FFT_DFT_AMP_PHA(fs, f0[1], &fft);
+		fprintf(stderr, "Sin: %f\t:%f\n", fft.mag, fft.phase);
+		FFT_DFT_AMP_PHA(fs, f0[2], &fft);
 		fprintf(stderr, "Sin: %f\t:%f\n", fft.mag, fft.phase);
 
 		FFT_CLR();
@@ -158,14 +217,14 @@ int fem_raw_test(void)
 
 	// FFTW test
 	out = (float *)malloc(sizeof(float) * cnt * 2);
-	if ((FFT_INIT(cnt, DFT_1D_R2C)) != NULL)
+	if ((FFT_INIT(cnt, DFT_1D_C2C)) != NULL)
 	{
 		ret = FFT_DFT(raw1, cnt);
 		if (ret >= 0) {
 			FFT_DFT_COPY(out);
 			fftw_data_plot("out1.dat", out, fs, cnt);
 			FFT_DFT_AMP_PHA(fs, f0, &fft);
-			fprintf(stderr, "raw1 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
+			fprintf(stderr, "raw1: %f %f\n", fft.mag, fft.phase);
 		}
 
 		ret = FFT_DFT(raw2, cnt);
@@ -173,7 +232,7 @@ int fem_raw_test(void)
 			FFT_DFT_COPY(out);
 			fftw_data_plot("out2.dat", out, fs, cnt);
 			FFT_DFT_AMP_PHA(fs, f0, &fft);
-			fprintf(stderr, "raw2 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
+			fprintf(stderr, "raw2: %f\t %f\n", fft.mag, fft.phase);
 		}
 
 		FFT_CLR();
@@ -187,14 +246,13 @@ int fem_raw_test(void)
 	if (coeff != NULL) {
 		if (float_fir_filter(raw1, raw1, cnt, coeff, coeff_len) == 0) {
 			write_raw_txt("raw11.dat", raw1, cnt);
-			fprintf(stderr, ">>>>\n");
 			if ( FFT_INIT(cnt, DFT_1D_C2C) != NULL) {
 
 				FFT_DFT(raw1, cnt);
 				FFT_DFT_COPY(out);
 				fftw_data_plot("fir-out1.dat", out, fs, cnt);
 				FFT_DFT_AMP_PHA(fs, f0, &fft);
-				fprintf(stderr, "FIR 幅值:%f\t相位:%f\n", fft.mag, fft.phase);
+				fprintf(stderr, "FIR: %f %f\n", fft.mag, fft.phase);
 			}
 
 		}
@@ -218,7 +276,6 @@ int main(int argc, char *argv[])
 
 	sin_test();
 
-	fprintf(stderr, "Generate filtel coeffient\n");
 	fir_test();
 
 	fem_raw_test();

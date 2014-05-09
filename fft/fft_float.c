@@ -128,10 +128,10 @@ int float_fft_dft_copy(float *_buf)
 	if (fft->init != F_DFT || !_buf)
 		return -1;
 	/* 实部 + 虚部 */
-	length = fft->sum * 2;
+	length = fft->sum * sizeof(fftwf_complex);
 
 	/* 点数 * 每个点空间 */
-	memcpy(_buf, fft->dat, length * sizeof(float));
+	memcpy(_buf, fft->dat, length);
 
 	return length;
 }
@@ -172,7 +172,6 @@ int float_dft_amp_and_phase(int fs, int f0, struct fft_t *fft_t)
 
 	rl = (float *)fft->dat + oft*2;
 	ig = rl+1;
-
 
 	/* 幅值 */
 	fft_t->mag = sqrtf((*rl)*(*rl) + (*ig)*(*ig));
@@ -247,7 +246,7 @@ int fftw_data_plot(char *fname, float *dat, int fs, int cnt)
 	FILE *fp = NULL;
 	int i;
 	float *rl, *ig;
-	float K,An, dB, Pn;
+	float K, An, dB, Pn;
 	float freq;
 
 	if ((fp = fopen(fname, "w+")) == NULL) {
@@ -259,9 +258,9 @@ int fftw_data_plot(char *fname, float *dat, int fs, int cnt)
 	rl = (float *)&dat[0];
 	ig = (float *)&dat[1];
 	/* P = 180/(4.0 * atan(1.0)); */
-	K = (float)2/cnt;
+	K = 2.0/cnt;
 
-	for (i = 0; i < cnt; i++)
+	for (i = 0; i < cnt/2; i++)
 	{
 		freq = (float)fs * i / cnt;
 		An = sqrtf((*rl) * (*rl) + (*ig) * (*ig));

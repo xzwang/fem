@@ -290,7 +290,7 @@ float *alloc_kaiser_coeff(int filter_type, int *coeff_len, int fs, int fc1, int 
 	if (ret == 0) {
 		for (n = 0; n < *coeff_len; n++) {
 			coeff[n] *= sinc[n];
-			fprintf(stderr, "kaiser %d, %f %f\n", n, sinc[n], coeff[n]);
+			/* fprintf(stderr, "kaiser %d, %f %f\n", n, sinc[n], coeff[n]); */
 		}
 	}
 	else {
@@ -329,7 +329,7 @@ float *alloc_filter_coeff(int filter_type, int window_type, int length, int fs, 
 	if (ret == 0) {
 		for (n = 0; n < length; n++) {
 			coeff[n] *= sinc[n];
-			fprintf(stderr, "%d, %f %f\n", n, sinc[n], coeff[n]);
+			/* fprintf(stderr, "%d, %f %f\n", n, sinc[n], coeff[n]); */
 		}
 	}
 	else {
