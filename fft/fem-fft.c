@@ -1,6 +1,6 @@
 #include <sys/time.h>
 #include "fft.h"
-#include "firfilter.h"
+#include "fir.h"
 
 int read_raw_txt(char *fname, float *fft1, float *fft2)
 {
