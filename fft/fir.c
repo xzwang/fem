@@ -214,15 +214,10 @@ int float_fir_filter(float *in, float *out, int length, float *coeff, int coeff_
 
 int calc_kaiser_params(float ripple, float transwidth, float fs, float *beta)
 {
-        // Calculate delta w
-        float dw = 2 * M_PI * transwidth / fs;
-	int length;
-
-        // Calculate ripple dB
-        float a = -20.0 * log10f(ripple);
-
-        // Calculate filter order
+        float dw = 2 * M_PI * transwidth / fs;	//delta w
+        float a = -20.0 * log10f(ripple);	//ripple dB
         int m;
+	int length;
 
         if (a > 21)
 		m = ceil((a-7.95) / (2.285*dw));
@@ -249,7 +244,7 @@ int create_kaiser_window(int length, float beta, float **coeff)
         float m_2 = 0.5 *(length - 1);	//ORDER/2
 
 	window = (float *) malloc(length * sizeof(float));
-	if (window == NULL) {
+	if (!window) {
 		fprintf(stderr, "Could not allocate memory for window\n");
 		return -1;
 	}
@@ -384,6 +379,7 @@ static int plot_filter(char *fname, float *dat, int fs, int cnt)
 
 	return 0;
 }
+
 void fir_out(char *fname, float *coeff, int coeff_num, int fs)
 {
 	float *out;

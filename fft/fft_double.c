@@ -3,47 +3,70 @@
  * All Rights Reserved.
  * Filename: fft_double.c
  * Author: xz.wang
- * Last modified: 2014-05-07 11:18
+ * Last modified: 2014-05-07 11:32
  * Description:		version:
  **********************************************************/
 #include "fft.h"
 
 static struct fft_drv fft_drv;
 
-/*****************************************************************
-* @Function	double_fft_init  - 初始化FFT-DFT参数,分配内存
-*
-* @Param	cnt - DFT点数
-* @Param	flags - DFT类型
-*
-* @Returns	用户buffer
-*****************************************************************/
+void double_fft_clear(void)
+{
+	struct fft_drv *fft = &fft_drv;
+
+	if (fft->init == 1) {
+		if (!fft->dat)
+			fftw_free(fft->dat);
+		if (!fft->plan)
+			fftw_destroy_plan((fftw_plan)fft->plan);
+
+		memset(fft, 0x0, sizeof(struct fft_drv));
+	}
+}
+
 double *double_fft_init(int cnt, int flags)
 {
 	fftw_complex *fftw;
+	fftw_plan plan;
 
-	if (fft_drv.init > F_NONE && fft_drv.dat != NULL) {
-		fftw_free(fft_drv.dat);
+	// clear fft if need
+	double_fft_clear();
+
+	switch (flags) {
+		case IDFT_1D_C2C:
+		case DFT_1D_C2C:
+			fft_drv.length = sizeof(fftw_complex) * cnt;
+			break;
+		case DFT_1D_R2C:
+			fft_drv.length = sizeof(fftw_complex) * (cnt/2 + 1);
+			break;
+		default:
+			return NULL;
 	}
-	if (flags == DFT_1D_C2C) {
-		fftw = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * cnt);
-	}
-	else if (flags == DFT_1D_R2C) {
-		fftw = fftw_malloc(sizeof(fftw_complex) * (cnt/2 + 1));
-	}
-	else {
-		fprintf(stderr, "%s flags invaild\n", __FUNCTION__);
+
+	fftw = (fftw_complex *)fftw_malloc(fft_drv.length);
+	if (!fftw) {
 		return NULL;
 	}
-	if (fftw == NULL) {
-		fprintf(stderr, "fftw memory allocation failure\n");
+
+	if (flags == DFT_1D_C2C || flags == IDFT_1D_C2C) {
+		plan = fftw_plan_dft_1d(cnt, (fftw_complex *)fftw, (fftw_complex *)fftw, FFTW_FORWARD, FFTW_ESTIMATE);
+	}
+	else {
+		plan = fftw_plan_dft_r2c_1d(cnt, (double *)fftw, (fftw_complex *)fftw, FFTW_ESTIMATE);
+	}
+
+	if (!plan)
+	{
+		fftw_free(fftw);
 		return NULL;
 	}
 
 	fft_drv.flags = flags;
-	fft_drv.init = F_INIT;
+	fft_drv.init = 1;
 	fft_drv.dat = (void *)fftw;
-	fft_drv.sum = cnt;
+	fft_drv.pnt = cnt;
+	fft_drv.plan = (fftw_plan)plan;
 
 	return (double *)fftw;
 }
@@ -62,43 +85,38 @@ int double_fft_dft(double *dat, int cnt)
 {
 	struct fft_drv *fft = &fft_drv;
 	double *in = NULL;
-	int n = cnt;
-	fftw_plan plan;
 
-	if (fft->init == F_NONE) {
+	if (fft->init != 1)
 		return -1;
-	}
-	if (!dat || cnt != fft->sum) {
-
+	if (cnt > fft->pnt || !dat) {
 		return -2;
 	}
+	/*
+	 * if (cnt <= fft->pnt)){;}-->If the actual length is short,
+	 * zero padding will be used
+	 */
+
+	in = (double *)fft->dat;
+	memset(in, 0x00, sizeof(fftw_complex) * fft->length);
 
 	/* 实数DFT变换 */
 	if (fft->flags == DFT_1D_R2C) {
-		plan = fftw_plan_dft_r2c_1d(cnt, dat, (fftw_complex *)fft->dat, FFTW_ESTIMATE);
-		if (!plan) {
-			return -3;
-		}
+		memcpy(in, dat, sizeof(double) * cnt);
 	}
 	/* 复数DFT变换 */
-	else if (fft->flags == DFT_1D_C2C) {
-		in = (double *)fft->dat;
-		while (n--) {
-			*in++ = *dat++;
-			*in++ = 0x0;
-		}
-		plan = fftw_plan_dft_1d(cnt, (fftw_complex *)fft->dat, (fftw_complex *)fft->dat, FFTW_FORWARD, FFTW_ESTIMATE);
-	}
 	else {
-		return -3;
+		while (cnt--) {
+			/**in++ = *dat++;*/
+			/**in++ = 0x0;*/
+			*in = *dat++;
+			in += 2;
+		}
 	}
-	fft->init = F_DFT;
+
 	/* fprintf(stderr, "%s\n", fftw_export_wisdom_to_string()); */
 	/* fftw_export_wisdom_to_filename("wisdom"); */
 
-	fftw_execute(plan);
-
-	fftw_destroy_plan(plan);
+	fftw_execute((fftw_plan)fft->plan);
 
 	return 0;
 }
@@ -108,59 +126,41 @@ int double_fft_idft(double *dat, int cnt)
 	return 0;
 }
 
-int double_fft_dft_copy(double *_buf)
+int double_fft_buffer_copy(double *_buf)
 {
 	struct fft_drv *fft = &fft_drv;
-	int length;
 
-	if (fft->init != F_DFT || !_buf)
+	if (fft->init != 1)
 		return -1;
-	/* 实部 + 虚部 */
-	length = fft->sum * 2;
 
-	/* 点数 * 每个点空间 */
-	memcpy(_buf, fft->dat, length * sizeof(double));
+	/* result : real[N][0] + imag[N][1] */
+	memcpy(_buf, fft->dat, fft->length);
 
-	return length;
-}
-
-int double_fft_clear(void)
-{
-	struct fft_drv *fft = &fft_drv;
-
-	if (fft->dat != NULL) {
-		fftw_free(fft->dat);
-	}
-
-	memset(fft, 0x0, sizeof(struct fft_drv));
-
-	return 0;
+	return fft->length;
 }
 
 int double_dft_amp_and_phase(int fs, int f0, struct fft_t *fft_t)
 {
-	double P, K, F;
+	double K, F;
 	double *rl, *ig;
-	int n;
+	int oft;
 	struct fft_drv *fft = &fft_drv;
 
-	if (fft->init != F_DFT) {
+	if (fft->init != 1)
 		return -1;
-	}
 
 	/* PI = 4.0*atan(1.0); P = 180/PI 弧度 */
-	P = 180/(4.0*atan(1.0));
+	/* P = 180/(4.0*atan(1.0)); */
 	/* DFT第0个点为直流分量,幅值=An/N, 其他点为An/(N/2) */
-	K = 2.0/fft->sum;
+	K = 2.0/fft->pnt;
 	/* 频率分辨率 */
-	F = (double)fs/fft->sum;
+	F = (double)fs/fft->pnt;
 
 	/* f0 对应频谱点号 */
-	n = f0/F;
+	oft = f0/F;
 
-	rl = (double *)fft->dat + n*2;
+	rl = (double *)fft->dat + oft*2;
 	ig = rl+1;
-
 
 	/* 幅值 */
 	fft_t->mag = sqrtf((*rl)*(*rl) + (*ig)*(*ig));
@@ -212,7 +212,7 @@ int double_fast_goerztel_algorithm(double *dat, int cnt, int f0, int fs, struct 
 
 	q0 = q1 = q2 = 0.0;
 
-	for ( i = 0; i < cnt; i++) {
+	for (i = 0; i < cnt; i++) {
 		q0 = coeff*q1 - q2 + dat[i];
 		q2 = q1;
 		q1 = q0;
@@ -229,3 +229,121 @@ int double_fast_goerztel_algorithm(double *dat, int cnt, int f0, int fs, struct 
 	return 0;
 }
 
+struct goerztel_algo_t {
+	int length, cnt;
+	double sine;
+	double cosine;
+	double coeff;
+	double q0,q1,q2;
+};
+
+struct goerztel_algo_t gzl_algo;
+
+void double_goerztel_init(int cnt, int f0, int fs)
+{
+	double PI = 4.0 * atan(1.0);
+	double k = (double)(cnt * f0) / fs;
+	double omega = (2.0 * PI * k) / cnt;
+
+	memset(&gzl_algo, 0x0, sizeof(struct goerztel_algo_t));
+
+	gzl_algo.length = cnt;
+
+	/* 进行一次正弦和余弦计算 */
+	gzl_algo.sine = sinf(omega);
+	gzl_algo.cosine = cosf(omega);
+	/* 计算系数 */
+	gzl_algo.coeff = 2.0 * gzl_algo.cosine;
+}
+
+int double_goerztel_update(double *dat, int cnt)
+{
+	int i;
+	struct goerztel_algo_t *gzl = &gzl_algo;
+
+	if (gzl->cnt < gzl->length) {
+		gzl->cnt += cnt;
+
+		for (i = 0; i < cnt; i++) {
+			gzl->q0 = gzl->coeff * gzl->q1 - gzl->q2 + *dat++;
+			gzl->q2 = gzl->q1;
+			gzl->q1 = gzl->q0;
+		}
+
+		return 0;
+	}
+	else {
+		return -1;
+	}
+}
+
+int double_goerztel_final(double *dat, int cnt, struct fft_t *fft)
+{
+	double rl, ig;
+	struct goerztel_algo_t *gzl = &gzl_algo;
+	int i;
+
+	if (cnt > 0 && dat) {
+		gzl->cnt += cnt;
+
+		for (i = 0; i < cnt; i++) {
+			gzl->q0 = gzl->coeff * gzl->q1 - gzl->q2 + *dat++;
+			gzl->q2 = gzl->q1;
+			gzl->q1 = gzl->q0;
+		}
+	}
+
+	if (gzl->cnt == gzl->length) {
+
+		rl = (gzl->q1 - gzl->q2 * gzl->cosine);
+		ig = (gzl->q2 * gzl->sine);
+
+		/* 计算模值和相位 */
+		fft->mag = sqrtf(rl*rl + ig*ig);
+		fft->mag *= (2.0/gzl->cnt);
+		fft->phase = atan2f(ig, rl);
+
+		return 0;
+	}
+	else {
+		return -1;
+	}
+}
+
+int fftw_data_plot(char *fname, double *dat, int fs, int cnt)
+{
+	FILE *fp = NULL;
+	int i;
+	double *rl, *ig;
+	double K, An, dB, Pn;
+	double freq;
+
+	if ((fp = fopen(fname, "w+")) == NULL) {
+		return -1;
+	}
+
+	fprintf(fp, "#num\tfreq\tmag\tmagdB\tphase\n");
+
+	rl = (double *)&dat[0];
+	ig = (double *)&dat[1];
+	/* P = 180/(4.0 * atan(1.0)); */
+	K = 2.0/cnt;
+
+	for (i = 0; i < cnt/2; i++)
+	{
+		freq = (double)fs * i / cnt;
+		An = sqrtf((*rl) * (*rl) + (*ig) * (*ig));
+		An *= K;
+		dB = 20 * log10f(An);
+		Pn = atan2f(*ig, *rl);
+		/* Pn *= P; */ //rad
+
+		fprintf(fp, "%d %f %f %f %f\n", i, freq, An, dB, Pn);
+		rl+=2;
+		ig+=2;
+	}
+
+	fclose(fp);
+
+	return 0;
+}
