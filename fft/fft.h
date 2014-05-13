@@ -53,7 +53,7 @@ struct fft_t {
  */
 extern float *float_fft_init(int cnt, int flags);
 extern int float_fft_dft(float *dat, int cnt);
-extern int float_fft_dft_copy(float *buf);
+extern int float_fft_buffer_copy(float *_buf);
 extern int float_fft_idft(float *dat, int cnt);
 extern void float_fft_clear(void);
 extern int float_dft_amp_and_phase(int fs, int f0, struct fft_t *fft_t);
@@ -67,7 +67,7 @@ extern int float_goerztel_final(float *dat, int cnt, struct fft_t *fft);
 
 extern double *double_fft_init(int cnt, int flags);
 extern int double_fft_dft(double *dat, int cnt);
-extern int double_fft_dft_copy(double *buf);
+extern int double_fft_buffer_copy(float *_buf);
 extern int double_fft_idft(double *dat, int cnt);
 extern void double_fft_clear(void);
 extern int double_dft_amp_and_phase(int fs, int f0, struct fft_t *fft);
@@ -87,7 +87,7 @@ extern int double_fast_goerztel_algorithm(double *dat, int cnt, int f0, int fs, 
 		float_fft_clear()
 
 	#define FFT_DFT_COPY(buf)	\
-		float_fft_dft_copy(buf)
+		float_fft_buffer_copy(buf)
 
 	#define FFT_DFT_AMP_PHA(Fs, F0, fft_t)	\
 		float_dft_amp_and_phase(Fs, F0, fft_t)
@@ -110,7 +110,7 @@ extern int double_fast_goerztel_algorithm(double *dat, int cnt, int f0, int fs, 
 		double_fft_clear()
 
 	#define FFT_DFT_COPY(buf)	\
-		double_fft_dft_copy(buf)
+		double_fft_buffer_copy(buf)
 
 	#define FFT_DFT_AMP_PHA(Fs, F0, fft_t)	\
 		double_dft_amp_and_phase(Fs, F0, fft_t)

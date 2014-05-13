@@ -97,7 +97,7 @@ int float_fft_dft(float *dat, int cnt)
 	 */
 
 	in = (float *)fft->dat;
-	memset(in, 0x00, sizeof(fftwf_complex) * fft->length);
+	memset(in, 0x00, fft->length);
 
 	/* 实数DFT变换 */
 	if (fft->flags == DFT_1D_R2C) {
@@ -141,7 +141,7 @@ int float_fft_buffer_copy(float *_buf)
 
 int float_dft_amp_and_phase(int fs, int f0, struct fft_t *fft_t)
 {
-	float K, F;
+	float K, F, P;
 	float *rl, *ig;
 	int oft;
 	struct fft_drv *fft = &fft_drv;
@@ -150,7 +150,7 @@ int float_dft_amp_and_phase(int fs, int f0, struct fft_t *fft_t)
 		return -1;
 
 	/* PI = 4.0*atan(1.0); P = 180/PI 弧度 */
-	/* P = 180/(4.0*atan(1.0)); */
+	P = 180/(4.0*atan(1.0));
 	/* DFT第0个点为直流分量,幅值=An/N, 其他点为An/(N/2) */
 	K = 2.0/fft->pnt;
 	/* 频率分辨率 */
@@ -167,7 +167,7 @@ int float_dft_amp_and_phase(int fs, int f0, struct fft_t *fft_t)
 	fft_t->mag *= K;
 	/* 相位 */
 	fft_t->phase = atan2f(*ig, *rl);
-	/* *phase *= P; */
+	fft_t->phase *= P;
 
 	return 0;
 }
@@ -196,12 +196,13 @@ int float_fast_goerztel_algorithm(float *dat, int cnt, int f0, int fs, struct ff
 	float omega, sine, cosine, coeff;
 	float k, q0, q1, q2, rl, ig;
 	int i;
-	float PI, K;
+	float PI, K, P;
 
 	k = (float)(cnt * f0)/fs;
 
 	PI = (4.0*atan(1.0));
 	K = 2.0/cnt;
+	P = 180/(4.0*atan(1.0));
 	omega = (2.0 * PI * k)/cnt;
 
 	/* 进行一次正弦和余弦计算 */
@@ -225,7 +226,7 @@ int float_fast_goerztel_algorithm(float *dat, int cnt, int f0, int fs, struct ff
 	fft->mag = sqrtf(rl*rl + ig*ig);
 	fft->mag *= K;
 	fft->phase = atan2f(ig, rl);
-
+	fft->phase *= P;
 	return 0;
 }
 
@@ -279,7 +280,7 @@ int float_goerztel_update(float *dat, int cnt)
 
 int float_goerztel_final(float *dat, int cnt, struct fft_t *fft)
 {
-	float rl, ig;
+	float rl, ig, P;
 	struct goerztel_algo_t *gzl = &gzl_algo;
 	int i;
 
@@ -293,6 +294,7 @@ int float_goerztel_final(float *dat, int cnt, struct fft_t *fft)
 		}
 	}
 
+	P = 180/(4.0*atan(1.0));
 	if (gzl->cnt == gzl->length) {
 
 		rl = (gzl->q1 - gzl->q2 * gzl->cosine);
@@ -302,6 +304,7 @@ int float_goerztel_final(float *dat, int cnt, struct fft_t *fft)
 		fft->mag = sqrtf(rl*rl + ig*ig);
 		fft->mag *= (2.0/gzl->cnt);
 		fft->phase = atan2f(ig, rl);
+		fft->phase *= P;
 
 		return 0;
 	}

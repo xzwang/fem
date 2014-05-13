@@ -147,7 +147,7 @@ int sin_test(void)
 	write_raw_txt("sin_raw.dat", sinx, cnt);
 
 	dat2 = (float *)malloc(sizeof(float) * 2 * cnt);
-	if ((dat1 = FFT_INIT(cnt, DFT_1D_C2C)) != NULL)
+	if ((dat1 = FFT_INIT(cnt, DFT_1D_R2C)) != NULL)
 	{
 		ret = FFT_DFT(sinx, cnt);
 		if (ret >= 0) {
@@ -155,11 +155,11 @@ int sin_test(void)
 			fftw_data_plot("sin.dat", dat2, fs, cnt);
 		}
 		FFT_DFT_AMP_PHA(fs, f0[0], &fft);
-		fprintf(stderr, "Sin: %f\t:%f\n", fft.mag, fft.phase);
+		fprintf(stderr, "Sin : %f %f\t", fft.mag, fft.phase);
 		FFT_DFT_AMP_PHA(fs, f0[1], &fft);
-		fprintf(stderr, "Sin: %f\t:%f\n", fft.mag, fft.phase);
+		fprintf(stderr, "%f %f\t", fft.mag, fft.phase);
 		FFT_DFT_AMP_PHA(fs, f0[2], &fft);
-		fprintf(stderr, "Sin: %f\t:%f\n", fft.mag, fft.phase);
+		fprintf(stderr, "%f %f\n", fft.mag, fft.phase);
 
 		FFT_CLR();
 	}
@@ -169,15 +169,14 @@ int sin_test(void)
 	return 0;
 }
 
-int fem_raw_test(void)
+int fem_raw_test(char *name, int f0)
 {
-	#define TXT_NAME	"./64_347.txt"
 	#define POINT		(1000*24 + 10)
 
 	float *raw1, *raw2;
 	int cnt, ret;
 	float *out;
-	int fs = 24000, f0 = 64;
+	int fs = 24000;
 	float *coeff;
 	struct fft_t fft;
 
@@ -195,7 +194,7 @@ int fem_raw_test(void)
 		goto exit1;
 	}
 
-	cnt = read_raw_txt(TXT_NAME, raw1, raw2);
+	cnt = read_raw_txt(name, raw1, raw2);
 	if (cnt < 0) {
 		goto exit2;
 	}
@@ -215,11 +214,11 @@ int fem_raw_test(void)
 		tmp += rand;
 	}
 	float_goerztel_final(tmp, l, &fft);
-	fprintf(stderr, "raw1 GOERZTEL 3th-method %f %f\n", fft.mag, fft.phase);
+	fprintf(stderr, "1-GZL:%f %f\t", fft.mag, fft.phase);
 	FAST_GOERZTEL_DFT(raw1, cnt, f0, fs, &fft);
-	fprintf(stderr, "raw1 GOERZTEL:%f %f\n", fft.mag, fft.phase);
+	fprintf(stderr, "%f %f\n", fft.mag, fft.phase);
 	FAST_GOERZTEL_DFT(raw2, cnt, f0, fs, &fft);
-	fprintf(stderr, "raw2 GOERZTEL:%f %f\n", fft.mag, fft.phase);
+	fprintf(stderr, "2-GZL:%f %f\n", fft.mag, fft.phase);
 
 	// FFTW test
 	out = (float *)malloc(sizeof(float) * cnt * 2);
@@ -230,7 +229,7 @@ int fem_raw_test(void)
 			FFT_DFT_COPY(out);
 			fftw_data_plot("out1.dat", out, fs, cnt);
 			FFT_DFT_AMP_PHA(fs, f0, &fft);
-			fprintf(stderr, "raw1: %f %f\n", fft.mag, fft.phase);
+			fprintf(stderr, "1-FFTW: %f %f\n", fft.mag, fft.phase);
 		}
 
 		ret = FFT_DFT(raw2, cnt);
@@ -238,7 +237,7 @@ int fem_raw_test(void)
 			FFT_DFT_COPY(out);
 			fftw_data_plot("out2.dat", out, fs, cnt);
 			FFT_DFT_AMP_PHA(fs, f0, &fft);
-			fprintf(stderr, "raw2: %f\t %f\n", fft.mag, fft.phase);
+			fprintf(stderr, "2-FFTW: %f %f\n", fft.mag, fft.phase);
 		}
 
 		FFT_CLR();
@@ -250,15 +249,28 @@ int fem_raw_test(void)
 	int coeff_len = 31;
 	coeff = alloc_filter_coeff(LOW_PASS, HAMMING, coeff_len, fs, fc1, fc2);
 	if (coeff != NULL) {
+		write_raw_txt("coeff.txt", coeff, coeff_len);
 		if (float_fir_filter(raw1, raw1, cnt, coeff, coeff_len) == 0) {
 			write_raw_txt("raw11.dat", raw1, cnt);
-			if ( FFT_INIT(cnt, DFT_1D_C2C) != NULL) {
+			if ( FFT_INIT(cnt, DFT_1D_R2C) != NULL) {
 
 				FFT_DFT(raw1, cnt);
 				FFT_DFT_COPY(out);
 				fftw_data_plot("fir-out1.dat", out, fs, cnt);
 				FFT_DFT_AMP_PHA(fs, f0, &fft);
-				fprintf(stderr, "FIR: %f %f\n", fft.mag, fft.phase);
+				fprintf(stderr, "1-FIR-fft: %f-%f\n", fft.mag, fft.phase);
+			}
+
+		}
+		if (float_fir_filter(raw2, raw2, cnt, coeff, coeff_len) == 0) {
+			write_raw_txt("raw11.dat", raw2, cnt);
+			if ( FFT_INIT(cnt, DFT_1D_R2C) != NULL) {
+
+				FFT_DFT(raw2, cnt);
+				FFT_DFT_COPY(out);
+				fftw_data_plot("fir-out1.dat", out, fs, cnt);
+				FFT_DFT_AMP_PHA(fs, f0, &fft);
+				fprintf(stderr, "2-FIR-fft: %f-%f\n", fft.mag, fft.phase);
 			}
 
 		}
@@ -283,8 +295,14 @@ int main(int argc, char *argv[])
 	sin_test();
 
 	fir_test();
-
-	fem_raw_test();
+	fprintf(stderr, ">>>>>>>>>>>>>f0 = 64Hz\n");
+	fem_raw_test("64_347.txt", 64);
+	fprintf(stderr, ">>>>>>>>>>>>>f0 = 4096Hz\n");
+	fem_raw_test("C409623_347.txt", 4096);
+	fprintf(stderr, ">>>>>>>>>>>>>f0 = 8192Hz\n");
+	fem_raw_test("C819201_347.txt", 8192);
+	fprintf(stderr, ">>>>>>>>>>>>>f0 = 8192Hz\n");
+	fem_raw_test("8192_347.txt", 8192);
 
 	return 0;
 }
