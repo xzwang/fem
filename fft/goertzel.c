@@ -40,9 +40,6 @@ int fast_goertzel_algorithm(float *dat, int cnt, int f0, int fs, struct fft_t *f
 	 *
 	 * More simply: coeff = 2.0 * cos(2.0 * PI * target_freq/SAMPLE_RATE)
 	 */
-
-	/* k = (double)(0.5 + cnt * f0)/fs; */
-	/* omega = (2.0 * PI * k)/cnt; */
 	omega = (2.0 * PI * f0/fs);
 
 	sine = sin(omega);
@@ -51,15 +48,29 @@ int fast_goertzel_algorithm(float *dat, int cnt, int f0, int fs, struct fft_t *f
 
 	q1 = q2 = 0.0;
 
+	/*
+	 * If the length of the signal is N, the recursion for N-1 time is:
+	 * w(n) = x(n) + 2cos(2*PI*k/N)w(n-1) - w(n-2)
+	 * Complex formula: X(k) = w(N-1) - e^(-j*PI*k/N)w(N-2)
+	 * where k/N, k = N*f0/fs --> k/N = f0/fs;
+	 */
 	for (i = 0; i < cnt; i++) {
 		q0 = dat[i] + coeff*q1 - q2;
 		q2 = q1;
 		q1 = q0;
 	}
-	/* double m = q1*q1 + q2*q2 - coeff*q1*q2; */
-	/* m = sqrt(m) * K; */
-	/* fprintf(stderr, "power = %lf\n", m); */
+	/*
+	 * Power spectrum terms, Magnitude squared is the:
+	 * X(K)X'(K) = y(N)y'(N) = y(N-1)y'(N-1)
+	 *	= w(N-1)^2 + w(N-2)^2 - 2cos(2*PI*k/N)*w(N-1)w(N-2)
+	 */
 
+	/*
+	 * y(N) = cosine * w(N-1) - w(N-2) + j*sine*w(N-1)
+	 * where q1 = w(N-1), q2 = w(N-2)
+	 * Real : real = cosine * q1 - q2;
+	 * Image : imag = j*sine*q1
+	 */
 	/* rl = q1 - q2 * cosine; */
 	/* ig = q2 * sine; */
 	rl = cosine * q1 - q2;
@@ -97,7 +108,7 @@ int goertzel_update(float *dat, int cnt)
 		gzl->cnt += cnt;
 
 		for (i = 0; i < cnt; i++) {
-			gzl->q0 = coeff * gzl->q1 - gzl->q2 + *dat++;
+			gzl->q0 = *dat++ + coeff * gzl->q1 - gzl->q2;
 			gzl->q2 = gzl->q1;
 			gzl->q1 = gzl->q0;
 		}
@@ -121,7 +132,7 @@ int goertzel_final(float *dat, int cnt, struct fft_t *fft)
 		gzl->cnt += cnt;
 
 		for (i = 0; i < cnt; i++) {
-			gzl->q0 = coeff * gzl->q1 - gzl->q2 + *dat++;
+			gzl->q0 = *dat++ + coeff * gzl->q1 - gzl->q2;
 			gzl->q2 = gzl->q1;
 			gzl->q1 = gzl->q0;
 		}
@@ -146,3 +157,4 @@ int goertzel_final(float *dat, int cnt, struct fft_t *fft)
 		return -1;
 	}
 }
+
