@@ -1,6 +1,7 @@
 #include <sys/time.h>
 #include "fft.h"
 #include "fir.h"
+#include "goertzel.h"
 
 int read_raw_txt(char *fname, float *fft1, float *fft2)
 {
@@ -205,19 +206,19 @@ int fem_raw_test(char *name, int f0)
 	// Goerztel algorithm test
 	int l = cnt, rand;
 	float *tmp = raw1;
-	float_goerztel_init(cnt, f0, fs);
+	goertzel_init(cnt, f0, fs);
 	while (l > 10) {
 		rand = random()	% l;
 		/* fprintf(stderr, "rand(%d) = %d\n", l, rand); */
-		float_goerztel_update(tmp, rand);
+		goertzel_update(tmp, rand);
 		l -= rand;
 		tmp += rand;
 	}
-	float_goerztel_final(tmp, l, &fft);
-	fprintf(stderr, "1-GZL:%f %f\t", fft.mag, fft.phase);
-	FAST_GOERZTEL_DFT(raw1, cnt, f0, fs, &fft);
+	goertzel_final(tmp, l, &fft);
+	fprintf(stderr, "1-GZL-3:%f %f\t", fft.mag, fft.phase);
+	fast_goertzel_algorithm(raw1, cnt, f0, fs, &fft);
 	fprintf(stderr, "%f %f\n", fft.mag, fft.phase);
-	FAST_GOERZTEL_DFT(raw2, cnt, f0, fs, &fft);
+	fast_goertzel_algorithm(raw2, cnt, f0, fs, &fft);
 	fprintf(stderr, "2-GZL:%f %f\n", fft.mag, fft.phase);
 
 	// FFTW test
@@ -295,13 +296,13 @@ int main(int argc, char *argv[])
 	sin_test();
 
 	fir_test();
-	fprintf(stderr, ">>>>>>>>>>>>>f0 = 64Hz\n");
+	fprintf(stderr, ">>>>>>>>>>>>>f0 = 64Hz<<<<<<<<<<<<<\n");
 	fem_raw_test("64_347.txt", 64);
-	fprintf(stderr, ">>>>>>>>>>>>>f0 = 4096Hz\n");
+	fprintf(stderr, ">>>>>>>>>>>>>f0 = 4096Hz<<<<<<<<<<<<\n");
 	fem_raw_test("C409623_347.txt", 4096);
-	fprintf(stderr, ">>>>>>>>>>>>>f0 = 8192Hz\n");
+	fprintf(stderr, ">>>>>>>>>>>>>f0 = 8192Hz<<<<<<<<<<<<\n");
 	fem_raw_test("C819201_347.txt", 8192);
-	fprintf(stderr, ">>>>>>>>>>>>>f0 = 8192Hz\n");
+	fprintf(stderr, ">>>>>>>>>>>>>f0 = 8192Hz<<<<<<<<<<<<\n");
 	fem_raw_test("8192_347.txt", 8192);
 
 	return 0;

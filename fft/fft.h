@@ -16,6 +16,7 @@
 #include "fftw3.h"
 
 #define FLOAT_FFT
+#define DOUBLE_FFT
 
 
 struct fft_drv {
@@ -57,21 +58,13 @@ extern int float_fft_buffer_copy(float *_buf);
 extern int float_fft_idft(float *dat, int cnt);
 extern void float_fft_clear(void);
 extern int float_dft_amp_and_phase(int fs, int f0, struct fft_t *fft_t);
-extern int fftw_data_plot(char *fname, float *dat, int fs, int cnt);
-
-extern int float_fast_goerztel_algorithm(float *dat, int cnt, int f0, int fs, struct fft_t *fft_t);
-/* Goerztel three-section(initial->update->fanal) method -> Support real-time computing */
-extern void float_goerztel_init(int cnt, int f0, int fs);
-extern int float_goerztel_update(float *dat, int cnt);
-extern int float_goerztel_final(float *dat, int cnt, struct fft_t *fft);
 
 extern double *double_fft_init(int cnt, int flags);
 extern int double_fft_dft(double *dat, int cnt);
-extern int double_fft_buffer_copy(float *_buf);
+extern int double_fft_buffer_copy(double *_buf);
 extern int double_fft_idft(double *dat, int cnt);
 extern void double_fft_clear(void);
 extern int double_dft_amp_and_phase(int fs, int f0, struct fft_t *fft);
-extern int double_fast_goerztel_algorithm(double *dat, int cnt, int f0, int fs, struct fft_t *fft_t);
 
 #ifdef FLOAT_FFT
 	#define FFT_DFT(dat, cnt)	\
@@ -92,8 +85,7 @@ extern int double_fast_goerztel_algorithm(double *dat, int cnt, int f0, int fs, 
 	#define FFT_DFT_AMP_PHA(Fs, F0, fft_t)	\
 		float_dft_amp_and_phase(Fs, F0, fft_t)
 
-	#define FAST_GOERZTEL_DFT(dat, cnt, f0, fs, fft_t)	\
-		float_fast_goerztel_algorithm(dat, cnt, f0, fs, fft_t)
+extern int fftw_data_plot(char *fname, float *dat, int fs, int cnt);
 
 #elif defined(DOUBLE_FFT)
 	#define TYPE_	double_
@@ -115,8 +107,7 @@ extern int double_fast_goerztel_algorithm(double *dat, int cnt, int f0, int fs, 
 	#define FFT_DFT_AMP_PHA(Fs, F0, fft_t)	\
 		double_dft_amp_and_phase(Fs, F0, fft_t)
 
-	#define FAST_GOERZTEL_DFT(dat, cnt, f0, fs, fft_t)	\
-		double_fast_goerztel_algorithm(dat, cnt, f0, fs, fft_t)
+extern int fftw_data_plot(char *fname, double *dat, int fs, int cnt);
 #else
 	#error "UNDEFINED FFT TYPE"
 #endif

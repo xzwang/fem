@@ -20,7 +20,7 @@ endif
 DEBUG= -g -Wall
 FFTW=fft
 SRC=fem-fft.c
-OBJ= fft_float.o fir.o # fft_double.o
+OBJ= fft_float.o fir.o goertzel.o # fft_double.o
 LIB=libfft.a
 
 all: $(FFTW)
