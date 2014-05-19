@@ -594,6 +594,10 @@ int display_def_picture(char *fb, int type)
 		case WRITEERR:
 				ret = assign_picture(fb, 76, 85, 327, 101, (unsigned short *)gImage_writecder);
 				break;
+		case YFB_DEMO:
+				ScrCls(fb);
+				ret = assign_picture(fb, 27, 30, 746, 418, (unsigned short *)gImage_yfbdemo);
+				break;
 		default: 
 			ret = 0xff;
 			break;

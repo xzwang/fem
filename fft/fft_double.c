@@ -172,150 +172,12 @@ int double_dft_amp_and_phase(int fs, int f0, struct fft_t *fft_t)
 	return 0;
 }
 
-/*
- * 关于goerztel 算法,主要用于快速向量计算和快速谐波提取。虽然FFT在频谱分析中
- * 应用更加广泛，但如果只是计算基波或少量谐波，就没有必要进行全谱分析，无论是
- * 从速度上还是内存开销上，goerztel算法更加有效。另外FFT必须等数据完整接收才能
- * 进行，而goerztel则可以采用滑动窗口方法将数据分割计算
- * goerztel误差:
- * 1.系数coeff 2.乘法截断 3.加法舍入
- */
-/*****************************************************************
-* @Function	double_fast_goerztel_algorithm  - 快速基本goerztel算法
-*
-* @Param	dat - 采样原始数据
-* @Param	cnt - 采样点数N，最好满足fs/cnt为整数倍
-* @Param	f0 - 需要抽取幅值相位的频率
-* @Param	fs - 采样频率
-* @Param	fft - fft结果-赋值和相位
-*
-* @Returns	return 0 if success
-*****************************************************************/
-int double_fast_goerztel_algorithm(double *dat, int cnt, int f0, int fs, struct fft_t *fft)
-{
-	double omega, sine, cosine, coeff;
-	double k, q0, q1, q2, rl, ig;
-	int i;
-	double PI, K;
-
-	k = (double)(cnt * f0)/fs;
-
-	PI = (4.0*atan(1.0));
-	K = 2.0/cnt;
-	omega = (2.0 * PI * k)/cnt;
-
-	/* 进行一次正弦和余弦计算 */
-	sine = sinf(omega);
-	cosine = cosf(omega);
-	/* 计算系数 */
-	coeff = 2.0 * cosine;
-
-	q0 = q1 = q2 = 0.0;
-
-	for (i = 0; i < cnt; i++) {
-		q0 = coeff*q1 - q2 + dat[i];
-		q2 = q1;
-		q1 = q0;
-	}
-
-	rl = (q1 - q2*cosine);
-	ig = (q2*sine);
-
-	/* 计算模值和相位 */
-	fft->mag = sqrtf(rl*rl + ig*ig);
-	fft->mag *= K;
-	fft->phase = atan2f(ig, rl);
-
-	return 0;
-}
-
-struct goerztel_algo_t {
-	int length, cnt;
-	double sine;
-	double cosine;
-	double coeff;
-	double q0,q1,q2;
-};
-
-struct goerztel_algo_t gzl_algo;
-
-void double_goerztel_init(int cnt, int f0, int fs)
-{
-	double PI = 4.0 * atan(1.0);
-	double k = (double)(cnt * f0) / fs;
-	double omega = (2.0 * PI * k) / cnt;
-
-	memset(&gzl_algo, 0x0, sizeof(struct goerztel_algo_t));
-
-	gzl_algo.length = cnt;
-
-	/* 进行一次正弦和余弦计算 */
-	gzl_algo.sine = sinf(omega);
-	gzl_algo.cosine = cosf(omega);
-	/* 计算系数 */
-	gzl_algo.coeff = 2.0 * gzl_algo.cosine;
-}
-
-int double_goerztel_update(double *dat, int cnt)
-{
-	int i;
-	struct goerztel_algo_t *gzl = &gzl_algo;
-
-	if (gzl->cnt < gzl->length) {
-		gzl->cnt += cnt;
-
-		for (i = 0; i < cnt; i++) {
-			gzl->q0 = gzl->coeff * gzl->q1 - gzl->q2 + *dat++;
-			gzl->q2 = gzl->q1;
-			gzl->q1 = gzl->q0;
-		}
-
-		return 0;
-	}
-	else {
-		return -1;
-	}
-}
-
-int double_goerztel_final(double *dat, int cnt, struct fft_t *fft)
-{
-	double rl, ig;
-	struct goerztel_algo_t *gzl = &gzl_algo;
-	int i;
-
-	if (cnt > 0 && dat) {
-		gzl->cnt += cnt;
-
-		for (i = 0; i < cnt; i++) {
-			gzl->q0 = gzl->coeff * gzl->q1 - gzl->q2 + *dat++;
-			gzl->q2 = gzl->q1;
-			gzl->q1 = gzl->q0;
-		}
-	}
-
-	if (gzl->cnt == gzl->length) {
-
-		rl = (gzl->q1 - gzl->q2 * gzl->cosine);
-		ig = (gzl->q2 * gzl->sine);
-
-		/* 计算模值和相位 */
-		fft->mag = sqrtf(rl*rl + ig*ig);
-		fft->mag *= (2.0/gzl->cnt);
-		fft->phase = atan2f(ig, rl);
-
-		return 0;
-	}
-	else {
-		return -1;
-	}
-}
-
 int fftw_data_plot(char *fname, double *dat, int fs, int cnt)
 {
 	FILE *fp = NULL;
 	int i;
 	double *rl, *ig;
-	double K, An, dB, Pn;
+	double K, An, dB, Pn, P;
 	double freq;
 
 	if ((fp = fopen(fname, "w+")) == NULL) {
@@ -326,7 +188,7 @@ int fftw_data_plot(char *fname, double *dat, int fs, int cnt)
 
 	rl = (double *)&dat[0];
 	ig = (double *)&dat[1];
-	/* P = 180/(4.0 * atan(1.0)); */
+	P = 180/(4.0 * atan(1.0));
 	K = 2.0/cnt;
 
 	for (i = 0; i < cnt/2; i++)
@@ -336,7 +198,7 @@ int fftw_data_plot(char *fname, double *dat, int fs, int cnt)
 		An *= K;
 		dB = 20 * log10f(An);
 		Pn = atan2f(*ig, *rl);
-		/* Pn *= P; */ //rad
+		Pn *= P; //rad
 
 		fprintf(fp, "%d %f %f %f %f\n", i, freq, An, dB, Pn);
 		rl+=2;

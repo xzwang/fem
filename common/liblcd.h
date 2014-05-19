@@ -39,6 +39,7 @@ enum {
 	SYSWRITECD,
 	WRITESUCC,
 	WRITEERR,
+	YFB_DEMO,
 };
 
 extern int open_lcd(void);

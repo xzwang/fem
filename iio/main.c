@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
 	create_iio_pthread();
 
-	while (1)
+//	while (1)
 	{
 		lcd_test();
 	}

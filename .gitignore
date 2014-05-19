@@ -51,6 +51,7 @@ cscope.*
 *.libs*
 *.l[oa]
 tags
+/busybox-1_22_stable/busybox.links
 
 # gnu global files
 GPATH

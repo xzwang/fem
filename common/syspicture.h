@@ -10,4 +10,5 @@ extern unsigned char gImage_syswritecd[]; /* 327 X 101 */
 extern unsigned char gImage_waitsys[]; /* 327 X 101 */
 extern unsigned char gImage_writecder[]; /* 327 X 101 */
 extern unsigned char gImage_writecdsc[]; 
+extern unsigned char gImage_yfbdemo[];
 #endif

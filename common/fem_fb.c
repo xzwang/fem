@@ -30,7 +30,8 @@ void lcd_test(void)
                 return;
         }
         ScrCls(fb);
-#if 1
+	ret = display_def_picture(fb, YFB_DEMO);
+#if 0
         sleep(1);
         ret = display_def_picture(fb, WAITBACKGD);
         ret = display_def_picture(fb, WAITINFO);

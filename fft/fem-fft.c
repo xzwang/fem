@@ -259,7 +259,7 @@ int fem_raw_test(char *name, int f0)
 				FFT_DFT_COPY(out);
 				fftw_data_plot("fir-out1.dat", out, fs, cnt);
 				FFT_DFT_AMP_PHA(fs, f0, &fft);
-				fprintf(stderr, "1-FIR-fft: %f-%f\n", fft.mag, fft.phase);
+				fprintf(stderr, "1-FIR-fft: %f %f\n", fft.mag, fft.phase);
 			}
 
 		}
@@ -269,9 +269,9 @@ int fem_raw_test(char *name, int f0)
 
 				FFT_DFT(raw2, cnt);
 				FFT_DFT_COPY(out);
-				fftw_data_plot("fir-out1.dat", out, fs, cnt);
+				fftw_data_plot("fir-out2.dat", out, fs, cnt);
 				FFT_DFT_AMP_PHA(fs, f0, &fft);
-				fprintf(stderr, "2-FIR-fft: %f-%f\n", fft.mag, fft.phase);
+				fprintf(stderr, "2-FIR-fft: %f %f\n", fft.mag, fft.phase);
 			}
 
 		}
@@ -298,12 +298,12 @@ int main(int argc, char *argv[])
 	fir_test();
 	fprintf(stderr, ">>>>>>>>>>>>>f0 = 64Hz<<<<<<<<<<<<<\n");
 	fem_raw_test("64_347.txt", 64);
-	fprintf(stderr, ">>>>>>>>>>>>>f0 = 4096Hz<<<<<<<<<<<<\n");
-	fem_raw_test("C409623_347.txt", 4096);
-	fprintf(stderr, ">>>>>>>>>>>>>f0 = 8192Hz<<<<<<<<<<<<\n");
-	fem_raw_test("C819201_347.txt", 8192);
-	fprintf(stderr, ">>>>>>>>>>>>>f0 = 8192Hz<<<<<<<<<<<<\n");
-	fem_raw_test("8192_347.txt", 8192);
+	/* fprintf(stderr, ">>>>>>>>>>>>>f0 = 4096Hz<<<<<<<<<<<<\n"); */
+	/* fem_raw_test("C409623_347.txt", 4096); */
+	/* fprintf(stderr, ">>>>>>>>>>>>>f0 = 8192Hz<<<<<<<<<<<<\n"); */
+	/* fem_raw_test("C819201_347.txt", 8192); */
+	/* fprintf(stderr, ">>>>>>>>>>>>>f0 = 8192Hz<<<<<<<<<<<<\n"); */
+	/* fem_raw_test("8192_347.txt", 8192); */
 
 	return 0;
 }
