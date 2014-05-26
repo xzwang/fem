@@ -70,7 +70,7 @@ install: clean_target $(obj-install)
 	mkdir -p $(TARGETDIR)/mnt
 	mkdir -p $(TARGETDIR)/home
 	cp -aRf $(PLATFORM)/lib $(TARGETDIR)/
-	cp -aRf $(PLATFORM)/etc $(TARGETDIR)/etc
+	cp -aRf $(PLATFORM)/etc/* $(TARGETDIR)/etc/
 	cd $(PLATFORMDIR) && tar czvf rootfs.tar.gz rootfs
 
 include rules/all.mk
