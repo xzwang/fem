@@ -71,6 +71,7 @@ install: clean_target $(obj-install)
 	mkdir -p $(TARGETDIR)/home
 	cp -aRf $(PLATFORM)/lib $(TARGETDIR)/
 	cp -aRf $(PLATFORM)/etc $(TARGETDIR)/etc
+	cd $(PLATFORMDIR) && tar czvf rootfs.tar.gz rootfs
 
 include rules/all.mk
 .PHONY:	all build clean $(obj-y) $(obj-clean) $(obj-install) $(obj-distclean) $(obj-configure)
