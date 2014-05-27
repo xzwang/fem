@@ -196,12 +196,6 @@ udev_version.h:
 	$(Q) echo \#define UDEV_CONFIG_FILE	\"$(configdir)/udev.conf\" >> $@
 	$(Q) echo \#define UDEV_RULES_DIR	\"$(configdir)/rules.d\" >> $@
 
-# man pages
-%.8 %.7: %.xml
-	$(E) "  XMLTO   " $@
-	$(Q) xmlto man $?
-.PRECIOUS: %.8
-
 clean:
 	$(E) "  CLEAN   "
 	$(Q) - find . -type f -name '*.orig' -print0 | xargs -0r rm -f

@@ -1092,7 +1092,7 @@ int main(int argc, char *argv[], char *envp[])
 	dbg("our session is %d", sid);
 
 	/* OOM_DISABLE == -17 */
-	fd = open("/proc/self/oom_adj", O_RDWR);
+	fd = open("/proc/self/oom_score_adj", O_RDWR);
 	if (fd < 0)
 		err("error disabling OOM: %s", strerror(errno));
 	else {
